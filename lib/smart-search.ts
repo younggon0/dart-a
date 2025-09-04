@@ -51,6 +51,14 @@ export async function smartSearch(
 ): Promise<TableRow[]> {
   const intent = analyzeSearchIntent(userQuery);
   
+  // Check if query is asking about a different company
+  const queryLower = userQuery.toLowerCase();
+  if (queryLower.includes('apple') || queryLower.includes('google') || 
+      queryLower.includes('microsoft') || queryLower.includes('amazon')) {
+    // Return empty array for queries about other companies
+    return [];
+  }
+  
   // For profit and revenue queries, prioritize summary and segment tables
   if (intent.type === 'revenue' || intent.type === 'profit') {
     // First, try to find summary consolidated financial statements

@@ -1,0 +1,25 @@
+You are a financial data search expert. Analyze this query and extract key search terms.
+
+Query: "{QUERY}"
+
+Identify the core financial concepts and generate relevant search keywords:
+- Include both English and Korean terms
+- Focus on the main financial concept (revenue, profit, cash flow, etc.)
+- Include common variations used in financial statements
+
+Common Korean financial terms:
+- Revenue: 매출, 매출액, 수익
+- Operating profit: 영업이익, 영업손익
+- Net profit: 당기순이익, 순이익
+- Assets: 자산
+- Liabilities: 부채
+- Cash flow: 현금흐름
+
+Return JSON with:
+{
+  "concept": "revenue|profit|cash_flow|balance_sheet|general",
+  "keywords": ["term1", "term2", ...],
+  "language": "en|ko"
+}
+
+Be concise - return 5-10 most relevant keywords.

@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { analyzeQuery, generateResponse, QueryAnalysis } from '@/lib/claude';
-import { TableRow, SearchFilters } from '@/types/database';
-import { expandKeywords } from '@/lib/keyword-mapper';
-import { ContextBuilder } from '@/lib/context-builder';
-import { enhanceKeywords, analyzeQueryIntent } from '@/lib/query-enhancer';
-import { searchWithFallback } from '@/lib/search-strategy';
+import { analyzeQuery, generateResponse } from '@/lib/claude';
 import { smartSearch } from '@/lib/smart-search';
+import { ContextBuilder } from '@/lib/context-builder';
+import { TableRow } from '@/types/database';
 
 export interface ChatRequest {
   message: string;
@@ -18,7 +15,7 @@ export interface ChatResponse {
   success: boolean;
   response?: string;
   searchResults?: TableRow[];
-  analysis?: QueryAnalysis;
+  analysis?: any;
   error?: string;
 }
 
@@ -33,86 +30,94 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Analyze the query with Claude
+    // Step 1: Analyze query with Claude
     const analysis = await analyzeQuery(body.message);
+    console.log('Query analysis:', analysis);
     
-    // Handle keywords whether they come as array or object
-    let keywordsArray: string[] = [];
-    if (analysis.keywords) {
-      if (Array.isArray(analysis.keywords)) {
-        keywordsArray = analysis.keywords;
-      } else if (typeof analysis.keywords === 'object') {
-        // Flatten object values into array
-        keywordsArray = Object.values(analysis.keywords).flat().filter((k): k is string => typeof k === 'string');
-      }
-    }
+    // Step 2: Smart search for relevant tables
+    const corpCode = body.corpCode || '00126380';
+    const searchResults = await smartSearch(corpCode, body.message, 10);
     
-    // Expand keywords to include both English and Korean terms
-    const expandedKeywords = expandKeywords(keywordsArray);
-    
-    // Enhance keywords based on query patterns and intent
-    const enhancedKeywords = enhanceKeywords(body.message, expandedKeywords);
-    
-    // Analyze query intent for better filtering
-    const queryIntent = analyzeQueryIntent(body.message);
-    
-    // Build search filters from analysis
-    const filters: SearchFilters = {
-      corpCode: body.corpCode || '00126380', // Default to Samsung
-      keywords: enhancedKeywords,
-      statementType: analysis.statementType,
-      dateRange: analysis.dateRange,
-      limit: queryIntent.needsComparison ? 15 : 10, // Get more results if comparison needed
-    };
-
-    // First try smart search for financial queries
-    let searchResults = await smartSearch(
-      body.corpCode || '00126380',
-      body.message,
-      filters.limit || 10
-    );
-    
-    let strategy = { description: 'Smart search for financial data' };
-    
-    // If smart search didn't find anything, fall back to keyword search
+    // Step 3: Handle no results gracefully
     if (searchResults.length === 0) {
-      console.log('Smart search found no results, falling back to keyword search');
-      const fallbackResult = await searchWithFallback(
-        filters,
-        body.message
+      const noResultsMessage = getNoResultsMessage(
+        body.message,
+        analysis.concept,
+        body.language || analysis.language
       );
-      searchResults = fallbackResult.results;
-      strategy = fallbackResult.strategy;
+      
+      return NextResponse.json({
+        success: true,
+        response: noResultsMessage,
+        searchResults: [],
+        analysis,
+      });
     }
     
-    // Build context from search results using actual data
+    // Step 4: Build context from results
     const contextBuilder = new ContextBuilder();
     const context = contextBuilder.buildContext(searchResults, body.message);
     
-    // Generate response with Claude using the formatted context
+    // Step 5: Generate response with Claude
     const response = await generateResponse(
       body.message,
       context,
-      searchResults,
-      body.language || analysis.language || 'en'
+      body.language || analysis.language
     );
 
     return NextResponse.json({
       success: true,
       response,
-      searchResults: searchResults.slice(0, 5), // Return top 5 for display
+      searchResults: searchResults.slice(0, 5),
       analysis,
-      searchStrategy: strategy.description, // Include strategy for debugging
     });
   } catch (error) {
     console.error('Chat API error:', error);
     return NextResponse.json(
       { 
         success: false, 
-        error: 'Failed to process chat message',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        error: 'Failed to process your request. Please try again.',
       },
       { status: 500 }
     );
   }
+}
+
+/**
+ * Generate helpful message when no results found
+ */
+function getNoResultsMessage(
+  query: string,
+  concept: string,
+  language: 'en' | 'ko'
+): string {
+  if (language === 'ko') {
+    return `
+"${query}"에 대한 검색 결과를 찾을 수 없습니다.
+
+현재 데이터베이스에는 삼성전자의 재무제표 데이터가 저장되어 있습니다.
+다음과 같은 정보를 조회할 수 있습니다:
+• 매출액 및 성장률
+• 영업이익 추이
+• 현금흐름 현황
+• 재무상태표 주요 항목
+• 부채비율 및 자본구조
+
+다른 질문을 시도해 보시거나, 위의 항목들에 대해 문의해 주세요.
+    `.trim();
+  }
+
+  return `
+No results found for: "${query}"
+
+Our database currently contains Samsung Electronics financial data.
+You can ask about:
+• Revenue and growth rates
+• Operating profit trends
+• Cash flow statements
+• Balance sheet items
+• Debt ratios and capital structure
+
+Please try rephrasing your question or ask about one of the topics above.
+  `.trim();
 }
