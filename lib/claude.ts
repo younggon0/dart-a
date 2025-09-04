@@ -44,7 +44,7 @@ Return JSON with:
 Be concise - return 5-10 most relevant keywords.`;
 
     const response = await anthropic.messages.create({
-      model: 'claude-3-haiku-20240307',
+      model: 'claude-3-5-haiku-20241022',
       max_tokens: 300,
       temperature: 0,
       messages: [{
@@ -130,7 +130,7 @@ Instructions:
 
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+      model: 'claude-3-5-haiku-20241022',
       max_tokens: 1000,
       temperature: 0.3,
       messages: [{
