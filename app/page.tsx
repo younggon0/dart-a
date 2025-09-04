@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import ChatInterface from '@/components/chat/ChatInterface';
 import SearchResults from '@/components/search/SearchResults';
-import QuickQueries from '@/components/common/QuickQueries';
+// Quick Queries removed - now integrated in ChatInterface
 import CompanySelector from '@/components/company/CompanySelector';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,12 +14,7 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<{ name: string; code: string } | null>(null);
   const [language, setLanguage] = useState<'en' | 'ko'>('en');
-  const [selectedQuery, setSelectedQuery] = useState<string>('');
 
-  const handleQuickQuery = (query: string) => {
-    setSelectedQuery(query);
-    setActiveTab('chat'); // Switch to chat tab
-  };
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSearch = async (keywords: string[]) => {
@@ -75,11 +70,6 @@ export default function Home() {
               selectedCompany={selectedCompany || undefined}
               onCompanyChange={setSelectedCompany}
             />
-            
-            <QuickQueries 
-              onQuerySelect={handleQuickQuery}
-              language={language}
-            />
           </div>
         </aside>
         
@@ -94,10 +84,7 @@ export default function Home() {
             
             <div className="flex-1 overflow-hidden">
               <TabsContent value="chat" className="h-full m-0">
-                <ChatInterface 
-                  initialQuery={selectedQuery}
-                  onQueryProcessed={() => setSelectedQuery('')}
-                />
+                <ChatInterface language={language} />
               </TabsContent>
               
               <TabsContent value="search" className="h-full m-0 p-6 overflow-y-auto">
