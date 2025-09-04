@@ -20,18 +20,25 @@ export class SQLBuilder {
         const paramIndex = params.length + 1;
         params.push(`%${keyword}%`);
 
+        // Search in metadata AND in actual table data
         keywordConditions.push(`
           (metadata->>'table_title_en' ILIKE $${paramIndex} OR
            metadata->>'table_title_ko' ILIKE $${paramIndex} OR
            metadata->>'search_keywords_en' ILIKE $${paramIndex} OR
-           metadata->>'search_keywords_ko' ILIKE $${paramIndex})
+           metadata->>'search_keywords_ko' ILIKE $${paramIndex} OR
+           data::text ILIKE $${paramIndex})
         `);
 
+        // Enhanced relevance scoring
         relevanceScores.push(`
           CASE 
-            WHEN metadata->>'table_title_en' ILIKE $${paramIndex} THEN 5
-            WHEN metadata->>'table_title_ko' ILIKE $${paramIndex} THEN 4
-            WHEN metadata->>'search_keywords_en' ILIKE $${paramIndex} THEN 2
+            WHEN metadata->>'table_title_en' ILIKE $${paramIndex} THEN 10
+            WHEN metadata->>'table_title_ko' ILIKE $${paramIndex} THEN 10
+            WHEN data::text ILIKE $${paramIndex} AND data::text ILIKE '%영업이익%' THEN 8
+            WHEN data::text ILIKE $${paramIndex} AND data::text ILIKE '%매출%' THEN 8
+            WHEN metadata->>'search_keywords_en' ILIKE $${paramIndex} THEN 5
+            WHEN metadata->>'search_keywords_ko' ILIKE $${paramIndex} THEN 5
+            WHEN data::text ILIKE $${paramIndex} THEN 3
             ELSE 0
           END
         `);

@@ -27,10 +27,10 @@ interface ChatInterfaceProps {
 }
 
 const ENGLISH_QUERIES: QuickQuery[] = [
-  { label: 'Latest Revenue', query: 'What is the latest revenue and year-over-year growth?', icon: '💰' },
-  { label: 'Profit Trends', query: 'Show me operating profit trends for the last 3 years', icon: '📈' },
-  { label: 'Cash Flow', query: 'Show operating and investing cash flow', icon: '💵' },
-  { label: 'Balance Sheet', query: 'Summarize the latest balance sheet key items', icon: '💼' },
+  { label: 'Latest Revenue', query: 'Show me the latest annual revenue and calculate year-over-year growth rate', icon: '💰' },
+  { label: 'Profit Trends', query: 'Show me operating profit trends for the last 3 years with growth rates', icon: '📈' },
+  { label: 'Cash Flow', query: 'Show operating and investing cash flow for recent periods', icon: '💵' },
+  { label: 'Balance Sheet', query: 'Summarize the latest balance sheet key items including total assets and equity', icon: '💼' },
   { label: 'Debt Analysis', query: 'What is the current debt ratio and capital structure?', icon: '📊' },
   { label: 'R&D Investment', query: 'What is the R&D investment amount and percentage of revenue?', icon: '🔬' },
 ];
