@@ -7,16 +7,16 @@ export class SQLBuilder {
     WHERE corp_code = $1
   `;
 
-  buildSearchQuery(filters: SearchFilters): { query: string; params: any[] } {
+  buildSearchQuery(filters: SearchFilters): { query: string; params: unknown[] } {
     const queryParts: string[] = [this.baseQuery.trim()];
-    const params: any[] = [filters.corpCode];
+    const params: unknown[] = [filters.corpCode];
 
     // Add keyword search with relevance scoring
     if (filters.keywords && filters.keywords.length > 0) {
       const keywordConditions: string[] = [];
       const relevanceScores: string[] = [];
 
-      filters.keywords.forEach((keyword, idx) => {
+      filters.keywords.forEach((keyword) => {
         const paramIndex = params.length + 1;
         params.push(`%${keyword}%`);
 
@@ -78,7 +78,7 @@ export class SQLBuilder {
     };
   }
 
-  buildSimpleQuery(corpCode: string, limit: number = 5): { query: string; params: any[] } {
+  buildSimpleQuery(corpCode: string, limit: number = 5): { query: string; params: unknown[] } {
     return {
       query: `
         SELECT *
@@ -91,7 +91,7 @@ export class SQLBuilder {
     };
   }
 
-  buildStatsQuery(corpCode: string): { query: string; params: any[] } {
+  buildStatsQuery(corpCode: string): { query: string; params: unknown[] } {
     return {
       query: `
         SELECT 

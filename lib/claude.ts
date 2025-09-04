@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { config } from './config';
+import { TableRow } from '@/types/database';
 
 const anthropic = new Anthropic({
   apiKey: config.anthropic.apiKey,
@@ -21,13 +22,16 @@ export async function analyzeQuery(query: string): Promise<QueryAnalysis> {
 Query: "${query}"
 
 Extract:
-1. Keywords (financial terms, metrics)
+1. Keywords - IMPORTANT: Return BOTH English and Korean versions for financial terms
+   - For "revenue" include: ["revenue", "sales", "매출", "매출액"]
+   - For "profit" include: ["profit", "operating profit", "영업이익", "이익"]
+   - For "growth" include: ["growth", "YoY", "성장률", "전년대비"]
 2. Statement type (financial, segment, cash_flow, etc.)
 3. Time period or date range
 4. Query intent (what the user wants to know)
 5. Language (en or ko)
 
-Return as JSON with fields: keywords (array), statementType, period, dateRange (if specific dates), intent, language`;
+Return as JSON with fields: keywords (array with both English AND Korean terms), statementType, period, dateRange (if specific dates), intent, language`;
 
     const response = await anthropic.messages.create({
       model: 'claude-3-haiku-20240307',
@@ -51,9 +55,29 @@ Return as JSON with fields: keywords (array), statementType, period, dateRange (
       console.error('Failed to parse Claude response:', parseError);
     }
 
-    // Fallback analysis
+    // Fallback analysis with keyword expansion for common terms
+    const words = query.toLowerCase().split(' ').filter(word => word.length > 2);
+    const fallbackKeywords: string[] = [];
+    
+    // Add common financial term variations - be more specific
+    words.forEach(word => {
+      if (word.includes('revenue') || word.includes('sales')) {
+        fallbackKeywords.push('revenue', 'Sales Revenue', 'sales', '매출', '매출액', '판매', '수익');
+      } else if (word.includes('profit')) {
+        fallbackKeywords.push('profit', 'operating profit', 'Operating Profit', '이익', '영업이익');
+      } else if (word.includes('growth') || word.includes('yoy') || word.includes('year')) {
+        fallbackKeywords.push('growth', 'yoy', 'year-over-year', '성장률', '전년대비', '전년동기대비');
+      } else if (word.includes('cash')) {
+        fallbackKeywords.push('cash', 'Cash Flow', 'cash flow', '현금', '현금흐름');
+      } else if (word.includes('latest') || word.includes('recent')) {
+        fallbackKeywords.push('latest', 'recent', '최근', '최신');
+      } else if (word.length > 3) {
+        fallbackKeywords.push(word);
+      }
+    });
+    
     return {
-      keywords: query.toLowerCase().split(' ').filter(word => word.length > 3),
+      keywords: fallbackKeywords.length > 0 ? fallbackKeywords : ['financial', '재무'],
       intent: 'search',
       language: /[가-힣]/.test(query) ? 'ko' : 'en',
     };
@@ -64,25 +88,27 @@ Return as JSON with fields: keywords (array), statementType, period, dateRange (
 }
 
 export async function generateResponse(
-  query: string, 
-  searchResults: any[],
+  query: string,
+  context: string,
+  searchResults: TableRow[],
   language: 'en' | 'ko' = 'en'
 ): Promise<string> {
   try {
-    const resultsContext = searchResults
-      .map((r, i) => `Table ${i+1}: ${r.metadata?.table_title_en || r.metadata?.table_title || 'Untitled'}
-Period: ${r.metadata?.period_end || 'Unknown'}
-Type: ${r.metadata?.statement_type || 'Unknown'}`)
-      .join('\n\n');
-
-    const prompt = `Based on these search results, answer the user's question in ${language === 'ko' ? 'Korean' : 'English'}.
+    const prompt = `You are a financial data analyst. Based on the following table data, answer the user's question in ${language === 'ko' ? 'Korean' : 'English'}.
 
 User Question: "${query}"
 
-Search Results:
-${resultsContext}
+Context with Actual Data:
+${context}
 
-Provide a clear, concise answer focusing on the data found. If no relevant data was found, say so clearly.`;
+Instructions:
+1. Analyze the actual data values in the tables
+2. Provide specific numbers and figures from the data
+3. Calculate growth rates if asked and data is available
+4. Be precise and cite which table the data comes from
+5. If the data doesn't contain the requested information, clearly state what's missing
+
+Provide a clear, data-driven answer.`;
 
     const response = await anthropic.messages.create({
       model: 'claude-3-5-sonnet-20241022',

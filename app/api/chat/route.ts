@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { analyzeQuery, generateResponse } from '@/lib/claude';
+import { analyzeQuery, generateResponse, QueryAnalysis } from '@/lib/claude';
 import { query } from '@/lib/db';
 import { SQLBuilder } from '@/lib/sql-builder';
 import { TableRow, SearchFilters } from '@/types/database';
+import { expandKeywords } from '@/lib/keyword-mapper';
+import { ContextBuilder } from '@/lib/context-builder';
 
 export interface ChatRequest {
   message: string;
@@ -14,8 +16,8 @@ export interface ChatRequest {
 export interface ChatResponse {
   success: boolean;
   response?: string;
-  searchResults?: any[];
-  analysis?: any;
+  searchResults?: TableRow[];
+  analysis?: QueryAnalysis;
   error?: string;
 }
 
@@ -33,10 +35,24 @@ export async function POST(request: NextRequest) {
     // Analyze the query with Claude
     const analysis = await analyzeQuery(body.message);
     
+    // Handle keywords whether they come as array or object
+    let keywordsArray: string[] = [];
+    if (analysis.keywords) {
+      if (Array.isArray(analysis.keywords)) {
+        keywordsArray = analysis.keywords;
+      } else if (typeof analysis.keywords === 'object') {
+        // Flatten object values into array
+        keywordsArray = Object.values(analysis.keywords).flat().filter((k): k is string => typeof k === 'string');
+      }
+    }
+    
+    // Expand keywords to include both English and Korean terms
+    const expandedKeywords = expandKeywords(keywordsArray);
+    
     // Build search filters from analysis
     const filters: SearchFilters = {
       corpCode: body.corpCode || '00126380', // Default to Samsung
-      keywords: analysis.keywords,
+      keywords: expandedKeywords,
       statementType: analysis.statementType,
       dateRange: analysis.dateRange,
       limit: 10, // Get more results for context
@@ -47,9 +63,14 @@ export async function POST(request: NextRequest) {
     const { query: sqlQuery, params } = sqlBuilder.buildSearchQuery(filters);
     const searchResults = await query<TableRow>(sqlQuery, params);
     
-    // Generate response with Claude
+    // Build context from search results using actual data
+    const contextBuilder = new ContextBuilder();
+    const context = contextBuilder.buildContext(searchResults, body.message);
+    
+    // Generate response with Claude using the formatted context
     const response = await generateResponse(
       body.message,
+      context,
       searchResults,
       body.language || analysis.language || 'en'
     );

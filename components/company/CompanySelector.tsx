@@ -24,28 +24,29 @@ export default function CompanySelector({ selectedCompany, onCompanyChange }: Co
   const [selected, setSelected] = useState<Company | null>(selectedCompany || null);
 
   useEffect(() => {
-    fetchCompanies();
-  }, []);
-
-  const fetchCompanies = async () => {
-    try {
-      const response = await fetch('/api/companies');
-      const data = await response.json();
-      if (data.success) {
-        setCompanies(data.data);
-        if (!selected && data.data.length > 0) {
-          setSelected(data.data[0]);
-          if (onCompanyChange) {
-            onCompanyChange(data.data[0]);
+    const loadCompanies = async () => {
+      try {
+        const response = await fetch('/api/companies');
+        const data = await response.json();
+        if (data.success) {
+          setCompanies(data.data);
+          if (!selected && data.data.length > 0) {
+            setSelected(data.data[0]);
+            if (onCompanyChange) {
+              onCompanyChange(data.data[0]);
+            }
           }
         }
+      } catch (error) {
+        console.error('Failed to fetch companies:', error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Failed to fetch companies:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+    
+    loadCompanies();
+  }, [selected, onCompanyChange]);
+
 
   if (isLoading) {
     return (

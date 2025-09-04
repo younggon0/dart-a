@@ -12,7 +12,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
-  searchResults?: any[];
+  searchResults?: unknown[];
 }
 
 interface ChatInterfaceProps {
@@ -103,7 +103,7 @@ export default function ChatInterface({ initialQuery, onQueryProcessed }: ChatIn
           {messages.length === 0 ? (
             <div className="text-center text-gray-500 mt-8">
               <p>Ask me about financial data</p>
-              <p className="text-sm mt-2">Try: "What is the latest revenue?" or "Show me cash flow data"</p>
+              <p className="text-sm mt-2">Try: &quot;What is the latest revenue?&quot; or &quot;Show me cash flow data&quot;</p>
             </div>
           ) : (
             messages.map(message => (

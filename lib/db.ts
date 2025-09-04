@@ -7,9 +7,9 @@ const pool = new Pool({
   connectionTimeoutMillis: 2000,
 });
 
-export async function query<T = any>(
+export async function query<T = unknown>(
   text: string,
-  params?: any[]
+  params?: unknown[]
 ): Promise<T[]> {
   const start = Date.now();
   try {
@@ -27,9 +27,9 @@ export async function query<T = any>(
   }
 }
 
-export async function getOne<T = any>(
+export async function getOne<T = unknown>(
   text: string,
-  params?: any[]
+  params?: unknown[]
 ): Promise<T | null> {
   const rows = await query<T>(text, params);
   return rows[0] || null;

@@ -18,7 +18,7 @@ interface SearchResult {
     period_end?: string;
     confidence?: number;
   };
-  data?: any;
+  data?: Record<string, unknown> | unknown[][] | null;
   relevance?: number;
 }
 

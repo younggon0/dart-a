@@ -10,8 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('chat');
-  const [searchResults, setSearchResults] = useState([]);
-  const [selectedCompany, setSelectedCompany] = useState(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<{ name: string; code: string } | null>(null);
   const [language, setLanguage] = useState<'en' | 'ko'>('en');
   const [selectedQuery, setSelectedQuery] = useState<string>('');
 
@@ -20,6 +21,7 @@ export default function Home() {
     setActiveTab('chat'); // Switch to chat tab
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleSearch = async (keywords: string[]) => {
     try {
       const response = await fetch('/api/search', {
@@ -70,7 +72,7 @@ export default function Home() {
         <aside className="w-72 border-r bg-gray-50 p-4 overflow-y-auto">
           <div className="space-y-4">
             <CompanySelector
-              selectedCompany={selectedCompany}
+              selectedCompany={selectedCompany || undefined}
               onCompanyChange={setSelectedCompany}
             />
             
