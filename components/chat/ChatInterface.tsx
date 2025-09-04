@@ -7,6 +7,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ChevronRight, Sparkles } from 'lucide-react';
+import { SourcePanel } from '@/components/sources/SourcePanel';
+import { SourceReference } from '@/types/source';
 
 interface Message {
   id: string;
@@ -14,6 +16,7 @@ interface Message {
   content: string;
   timestamp: Date;
   searchResults?: unknown[];
+  sources?: SourceReference[];
 }
 
 interface QuickQuery {
@@ -101,6 +104,7 @@ export default function ChatInterface({ language = 'en' }: ChatInterfaceProps) {
           content: data.response,
           timestamp: new Date(),
           searchResults: data.searchResults,
+          sources: data.sources,
         };
         setMessages(prev => [...prev, assistantMessage]);
       } else {
@@ -157,10 +161,12 @@ export default function ChatInterface({ language = 'en' }: ChatInterfaceProps) {
                     </Badge>
                     <div className="flex-1">
                       <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                      {message.searchResults && message.searchResults.length > 0 && (
-                        <div className="mt-2 text-xs text-gray-500">
-                          Found {message.searchResults.length} relevant tables
-                        </div>
+                      {message.sources && message.sources.length > 0 && (
+                        <SourcePanel 
+                          sources={message.sources}
+                          variant="expandable"
+                          className="mt-3"
+                        />
                       )}
                     </div>
                   </div>

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { analyzeQuery, generateResponse } from '@/lib/claude';
 import { smartSearch } from '@/lib/smart-search';
-import { ContextBuilder } from '@/lib/context-builder';
+import { ContextBuilderWithSources } from '@/lib/context-builder-with-sources';
 import { TableRow } from '@/types/database';
+import { SourceReference } from '@/types/source';
 
 export interface ChatRequest {
   message: string;
@@ -15,6 +16,7 @@ export interface ChatResponse {
   success: boolean;
   response?: string;
   searchResults?: TableRow[];
+  sources?: SourceReference[];
   analysis?: any;
   error?: string;
 }
@@ -54,9 +56,9 @@ export async function POST(request: NextRequest) {
       });
     }
     
-    // Step 4: Build context from results
-    const contextBuilder = new ContextBuilder();
-    const context = contextBuilder.buildContext(searchResults, body.message);
+    // Step 4: Build context from results with source tracking
+    const contextBuilder = new ContextBuilderWithSources();
+    const { context, sources } = contextBuilder.buildContextWithSources(searchResults, body.message);
     
     // Step 5: Generate response with Claude
     const response = await generateResponse(
@@ -69,6 +71,7 @@ export async function POST(request: NextRequest) {
       success: true,
       response,
       searchResults: searchResults.slice(0, 5),
+      sources: sources.slice(0, 5), // Return top 5 sources
       analysis,
     });
   } catch (error) {
