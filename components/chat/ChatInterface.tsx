@@ -336,7 +336,7 @@ export default function ChatInterface({
       {messages.length === 0 && (
         <div className="border-t px-4 pt-3 pb-2">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-medium text-gray-600">
+            <span className="text-xs font-medium text-muted-foreground">
               {language === 'ko' ? '빠른 질문' : 'Quick queries'}
             </span>
           </div>
@@ -346,7 +346,8 @@ export default function ChatInterface({
                 key={index}
                 onClick={() => handleQuickQuery(query.query)}
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl
-                         bg-white border border-border hover:border-primary/50 hover:bg-primary/5
+                         bg-background border border-border hover:border-primary/50 hover:bg-primary/10
+                         dark:bg-muted dark:hover:bg-primary/20
                          text-foreground text-sm font-medium
                          transition-all duration-200 group shadow-sm hover:shadow-md"
               >
@@ -359,7 +360,7 @@ export default function ChatInterface({
               <button
                 onClick={() => setShowAllQueries(true)}
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full
-                         bg-transparent hover:bg-gray-100 text-gray-600 text-sm
+                         bg-transparent hover:bg-muted text-muted-foreground text-sm
                          transition-colors duration-200"
               >
                 <span>+{queries.length - 3} more</span>
@@ -369,7 +370,7 @@ export default function ChatInterface({
               <button
                 onClick={() => setShowAllQueries(false)}
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full
-                         bg-transparent hover:bg-gray-100 text-gray-600 text-sm
+                         bg-transparent hover:bg-muted text-muted-foreground text-sm
                          transition-colors duration-200"
               >
                 <span>Show less</span>
@@ -379,7 +380,7 @@ export default function ChatInterface({
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="border-t bg-white/50 backdrop-blur-sm p-4">
+      <form onSubmit={handleSubmit} className="border-t bg-background/50 dark:bg-background/80 backdrop-blur-sm p-4">
         <div className="flex gap-3">
           <Textarea
             value={input}
@@ -393,7 +394,7 @@ export default function ChatInterface({
             placeholder={language === 'ko' 
               ? "재무 데이터에 대해 물어보세요..."
               : "Ask about financial data..."}
-            className="min-h-[60px] resize-none rounded-xl border-border/50 bg-white/80 focus:bg-white transition-all"
+            className="min-h-[60px] resize-none rounded-xl border-border/50 bg-background/80 focus:bg-background dark:bg-muted dark:focus:bg-muted-foreground/10 transition-all"
             disabled={isLoading}
           />
           <Button 
