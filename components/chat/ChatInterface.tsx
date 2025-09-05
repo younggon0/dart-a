@@ -27,6 +27,7 @@ interface QuickQuery {
 
 interface ChatInterfaceProps {
   language?: 'en' | 'ko';
+  onMessagesChange?: (messages: Message[]) => void;
 }
 
 const ENGLISH_QUERIES: QuickQuery[] = [
@@ -47,7 +48,7 @@ const KOREAN_QUERIES: QuickQuery[] = [
   { label: '연구개발비', query: '최근 연구개발비 투자 규모와 매출 대비 비율을 보여주세요', icon: '🔬' },
 ];
 
-export default function ChatInterface({ language = 'en' }: ChatInterfaceProps) {
+export default function ChatInterface({ language = 'en', onMessagesChange }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -97,7 +98,11 @@ export default function ChatInterface({ language = 'en' }: ChatInterfaceProps) {
     if (messages.length > 0) {
       localStorage.setItem('chatMessages', JSON.stringify(messages));
     }
-  }, [messages]);
+    // Notify parent component of message changes
+    if (onMessagesChange) {
+      onMessagesChange(messages);
+    }
+  }, [messages, onMessagesChange]);
 
   useEffect(() => {
     // Scroll to bottom when messages change

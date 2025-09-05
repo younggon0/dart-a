@@ -1,16 +1,57 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ChatInterface from '@/components/chat/ChatInterface';
 import CompanySelector from '@/components/company/CompanySelector';
+import { SettingsModal } from '@/components/settings/SettingsModal';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, Menu, X, History, BarChart3, FileText, Settings } from 'lucide-react';
+import { TrendingUp, Menu, X, History, BarChart3, FileText, Settings, Download } from 'lucide-react';
 
 export default function Home() {
   const [selectedCompany, setSelectedCompany] = useState<{ name: string; code: string } | null>(null);
   const [language, setLanguage] = useState<'en' | 'ko'>('en');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [messages, setMessages] = useState<any[]>([]);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Load messages from localStorage on mount
+  useEffect(() => {
+    const storedMessages = localStorage.getItem('chatMessages');
+    if (storedMessages) {
+      try {
+        const parsed = JSON.parse(storedMessages);
+        setMessages(parsed);
+      } catch (e) {
+        console.error('Failed to load messages:', e);
+      }
+    }
+  }, []);
+
+  // Export chat functionality
+  const handleExportChat = () => {
+    if (messages.length === 0) {
+      alert(language === 'ko' ? '내보낼 대화가 없습니다.' : 'No chat to export.');
+      return;
+    }
+
+    // Format messages as markdown
+    const markdown = messages.map(msg => {
+      const role = msg.role === 'user' ? '**You**' : '**Assistant**';
+      const time = new Date(msg.timestamp).toLocaleString();
+      return `${role} (${time}):\n${msg.content}\n`;
+    }).join('\n---\n\n');
+
+    // Create blob and download
+    const blob = new Blob([markdown], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dart-e-chat-${new Date().toISOString().split('T')[0]}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
 
   return (
@@ -95,15 +136,15 @@ export default function Home() {
                   Quick Stats
                 </h3>
                 <div className="space-y-2">
-                  <div className="p-3 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 hover:shadow-md transition-all duration-200 cursor-pointer group">
-                    <div className="text-xs text-blue-600 font-medium">Revenue (2024)</div>
-                    <div className="text-lg font-bold text-blue-900 group-hover:scale-105 transition-transform duration-200 origin-left">₩300.87T</div>
-                    <div className="text-xs text-blue-600">+16.2% YoY</div>
+                  <div className="stats-card-blue p-3 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 hover:shadow-md transition-all duration-200 cursor-pointer group">
+                    <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">Revenue (2024)</div>
+                    <div className="text-lg font-bold text-blue-900 dark:text-blue-200 group-hover:scale-105 transition-transform duration-200 origin-left">₩300.87T</div>
+                    <div className="text-xs text-blue-600 dark:text-blue-400">+16.2% YoY</div>
                   </div>
-                  <div className="p-3 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl border border-green-200/50 hover:shadow-md transition-all duration-200 cursor-pointer group">
-                    <div className="text-xs text-green-600 font-medium">Operating Profit</div>
-                    <div className="text-lg font-bold text-green-900 group-hover:scale-105 transition-transform duration-200 origin-left">₩32.73T</div>
-                    <div className="text-xs text-green-600">+398.5% YoY</div>
+                  <div className="stats-card-green p-3 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl border border-green-200/50 hover:shadow-md transition-all duration-200 cursor-pointer group">
+                    <div className="text-xs text-green-600 dark:text-green-400 font-medium">Operating Profit</div>
+                    <div className="text-lg font-bold text-green-900 dark:text-green-200 group-hover:scale-105 transition-transform duration-200 origin-left">₩32.73T</div>
+                    <div className="text-xs text-green-600 dark:text-green-400">+398.5% YoY</div>
                   </div>
                 </div>
               </div>
@@ -115,15 +156,15 @@ export default function Home() {
                   Recent Chats
                 </h3>
                 <div className="space-y-1">
-                  <button className="w-full text-left p-2.5 hover:bg-muted rounded-lg transition-colors text-sm text-muted-foreground">
+                  <button className="chat-history-item w-full text-left p-2.5 hover:bg-muted rounded-lg transition-colors text-sm text-muted-foreground">
                     <div className="font-medium text-foreground truncate">Revenue Analysis</div>
                     <div className="text-xs opacity-75">2 hours ago</div>
                   </button>
-                  <button className="w-full text-left p-2.5 hover:bg-muted rounded-lg transition-colors text-sm text-muted-foreground">
+                  <button className="chat-history-item w-full text-left p-2.5 hover:bg-muted rounded-lg transition-colors text-sm text-muted-foreground">
                     <div className="font-medium text-foreground truncate">Cash Flow Statement</div>
                     <div className="text-xs opacity-75">Yesterday</div>
                   </button>
-                  <button className="w-full text-left p-2.5 hover:bg-muted rounded-lg transition-colors text-sm text-muted-foreground">
+                  <button className="chat-history-item w-full text-left p-2.5 hover:bg-muted rounded-lg transition-colors text-sm text-muted-foreground">
                     <div className="font-medium text-foreground truncate">Balance Sheet Review</div>
                     <div className="text-xs opacity-75">2 days ago</div>
                   </button>
@@ -137,11 +178,17 @@ export default function Home() {
                   Quick Actions
                 </h3>
                 <div className="space-y-2">
-                  <button className="w-full flex items-center gap-2 p-2.5 hover:bg-muted rounded-lg transition-colors text-sm">
-                    <FileText className="h-4 w-4" />
+                  <button 
+                    onClick={handleExportChat}
+                    className="w-full flex items-center gap-2 p-2.5 hover:bg-muted rounded-lg transition-colors text-sm"
+                  >
+                    <Download className="h-4 w-4" />
                     Export Chat
                   </button>
-                  <button className="w-full flex items-center gap-2 p-2.5 hover:bg-muted rounded-lg transition-colors text-sm">
+                  <button 
+                    onClick={() => setSettingsOpen(true)}
+                    className="w-full flex items-center gap-2 p-2.5 hover:bg-muted rounded-lg transition-colors text-sm"
+                  >
                     <Settings className="h-4 w-4" />
                     Settings
                   </button>
@@ -153,9 +200,20 @@ export default function Home() {
         </aside>
         
         <div className="flex-1 overflow-hidden">
-          <ChatInterface language={language} />
+          <ChatInterface 
+            language={language} 
+            onMessagesChange={setMessages}
+          />
         </div>
       </div>
+      
+      {/* Settings Modal */}
+      <SettingsModal 
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        language={language}
+        onLanguageChange={setLanguage}
+      />
     </main>
   );
 }
