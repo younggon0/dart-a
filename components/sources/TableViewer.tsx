@@ -3,13 +3,12 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface TableViewerProps {
   isOpen: boolean;
   onClose: () => void;
   tableName: string;
-  tableData?: any[][];
+  tableData?: unknown[][];
   period?: string;
 }
 
@@ -19,7 +18,7 @@ export function TableViewer({ isOpen, onClose, tableName, tableData, period }: T
   }
 
   // Detect if first row is headers
-  const hasHeaders = tableData[0] && tableData[0].every((cell: any) => 
+  const hasHeaders = tableData[0] && tableData[0].every((cell: unknown) => 
     typeof cell === 'string' && isNaN(Number(cell))
   );
   
@@ -55,7 +54,7 @@ export function TableViewer({ isOpen, onClose, tableName, tableData, period }: T
                         key={idx} 
                         className="border px-3 py-2 text-left font-medium text-gray-700 bg-gray-50"
                       >
-                        {header}
+                        {String(header)}
                       </th>
                     ))}
                   </tr>
@@ -87,7 +86,7 @@ export function TableViewer({ isOpen, onClose, tableName, tableData, period }: T
   );
 }
 
-function formatCell(value: any): string {
+function formatCell(value: unknown): string {
   if (value === null || value === undefined) return '';
   
   // Check if it's a number

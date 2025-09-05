@@ -26,10 +26,10 @@ export async function GET() {
     // Process to find operating profit data
     const tablesWithOperatingProfit = [];
     
-    for (const table of financialTables) {
+    for (const table of financialTables as Array<{id: number; source_file: string; title_en: string; title_ko: string; data: unknown[]}>) {
       if (table.data && Array.isArray(table.data)) {
         // Look for rows containing operating profit
-        const operatingProfitRow = table.data.find((row: any) => {
+        const operatingProfitRow = table.data.find((row: unknown) => {
           if (Array.isArray(row)) {
             const firstCell = String(row[0] || '');
             return firstCell.includes('영업이익') || firstCell.includes('영업손익');
@@ -37,7 +37,7 @@ export async function GET() {
           return false;
         });
         
-        const revenueRow = table.data.find((row: any) => {
+        const revenueRow = table.data.find((row: unknown) => {
           if (Array.isArray(row)) {
             const firstCell = String(row[0] || '');
             return firstCell.includes('매출액') || firstCell.includes('매출');

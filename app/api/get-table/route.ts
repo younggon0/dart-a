@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   const tableId = searchParams.get('id') || 'b2575fce560aa343c52359592e50cd24';
   
   try {
-    const result = await query(`
+    const result = await query<{data: unknown}>(`
       SELECT data
       FROM tables 
       WHERE id = $1
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
         headers,
         operatingProfitRow,
         revenueRow,
-        totalRows: data.length
+        totalRows: Array.isArray(data) ? data.length : 0
       });
     }
     

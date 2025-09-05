@@ -2,6 +2,7 @@ import { LRUCache } from 'lru-cache';
 import crypto from 'crypto';
 
 // Cache for query analysis results
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const analysisCache = new LRUCache<string, any>({
   max: 500, // Maximum 500 items
   // No TTL - cache indefinitely (demo server)
@@ -14,7 +15,7 @@ const responseCache = new LRUCache<string, string>({
 });
 
 // Cache statistics
-let cacheStats = {
+const cacheStats = {
   analysisHits: 0,
   analysisMisses: 0,
   responseHits: 0,
@@ -32,6 +33,7 @@ function generateCacheKey(...params: string[]): string {
 /**
  * Get cached analysis result
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getCachedAnalysis(query: string): any | null {
   const key = generateCacheKey(query.toLowerCase().trim());
   const cached = analysisCache.get(key);
@@ -49,6 +51,7 @@ export function getCachedAnalysis(query: string): any | null {
 /**
  * Set analysis result in cache
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function setCachedAnalysis(query: string, result: any): void {
   const key = generateCacheKey(query.toLowerCase().trim());
   analysisCache.set(key, result);

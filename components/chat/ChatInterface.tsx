@@ -4,8 +4,6 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { ChevronRight, Sparkles, User, Bot } from 'lucide-react';
 import { SourcePanel } from '@/components/sources/SourcePanel';
 import { SourceReference } from '@/types/source';
@@ -78,7 +76,7 @@ export default function ChatInterface({
       if (storedMessages) {
         try {
           const parsed = JSON.parse(storedMessages);
-          setMessages(parsed.map((msg: any) => ({
+          setMessages(parsed.map((msg: {role: string; content: string; timestamp: string | Date; id: string; searchResults?: unknown[]; sources?: SourceReference[]}) => ({
             ...msg,
             timestamp: new Date(msg.timestamp)
           })));
@@ -128,7 +126,7 @@ export default function ChatInterface({
           if (session) {
             console.log('Found session, loading messages:', session.messages.length);
             // Parse timestamps when loading from history
-            const messagesWithDates = session.messages.map((msg: any) => ({
+            const messagesWithDates = session.messages.map((msg: {role: string; content: string; timestamp: string | Date; id: string; searchResults?: unknown[]; sources?: SourceReference[]}) => ({
               ...msg,
               timestamp: new Date(msg.timestamp)
             }));
@@ -181,26 +179,6 @@ export default function ChatInterface({
   const handleQuickQuery = (query: string) => {
     setInput(query);
     handleSubmit(null, query);
-  };
-
-  const handleClearChat = () => {
-    // Clear messages
-    setMessages([]);
-    localStorage.removeItem('chatMessages');
-    
-    // Generate new session ID
-    const newSessionId = crypto.randomUUID ? crypto.randomUUID() : 
-      'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-      });
-    setSessionId(newSessionId);
-    localStorage.setItem('chatSessionId', newSessionId);
-    
-    // Reset UI state
-    setInput('');
-    setShowAllQueries(false);
   };
 
   const handleSubmit = async (e?: React.FormEvent | null, directQuery?: string) => {

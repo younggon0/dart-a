@@ -6,7 +6,6 @@ import { TableRow } from '@/types/database';
 import { SourceReference } from '@/types/source';
 import { getCacheStats } from '@/lib/cache/api-cache';
 import { 
-  getSession, 
   addToSession, 
   buildContextWithHistory,
   needsContext 
@@ -24,7 +23,10 @@ export interface ChatResponse {
   response?: string;
   searchResults?: TableRow[];
   sources?: SourceReference[];
-  analysis?: any;
+  analysis?: {
+    concept: string;
+    language: 'en' | 'ko';
+  };
   error?: string;
 }
 
@@ -72,9 +74,10 @@ export async function POST(request: NextRequest) {
     
     // Step 4: Build context from results with source tracking
     const contextBuilder = new ContextBuilderWithSources();
-    let { context, sources } = contextBuilder.buildContextWithSources(searchResults, body.message);
+    const { context: initialContext, sources } = contextBuilder.buildContextWithSources(searchResults, body.message);
     
     // Add conversation history if this is a follow-up question
+    let context = initialContext;
     if (body.sessionId && needsContext(body.message)) {
       context = buildContextWithHistory(context, body.sessionId, body.message);
       console.log('Added conversation history to context');

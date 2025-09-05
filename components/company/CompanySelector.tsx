@@ -55,7 +55,7 @@ export default function CompanySelector({ selectedCompany, onCompanyChange }: Co
     };
     
     loadCompanies();
-  }, []);
+  }, [selected, onCompanyChange]);
 
   const handleCompanyChange = (companyCode: string) => {
     const company = companies.find(c => c.code === companyCode);

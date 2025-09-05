@@ -2,7 +2,7 @@ export interface ChatSession {
   id: string;
   title: string;
   timestamp: number;
-  messages: any[];
+  messages: unknown[];
   language: 'en' | 'ko';
 }
 
@@ -63,19 +63,21 @@ export function deleteChatSession(sessionId: string): void {
   }
 }
 
-export function generateChatTitle(messages: any[], language: 'en' | 'ko'): string {
+export function generateChatTitle(messages: unknown[], language: 'en' | 'ko'): string {
   if (messages.length === 0) {
     return language === 'ko' ? '새 대화' : 'New Chat';
   }
   
   // Get the first user message
-  const firstUserMessage = messages.find(m => m.role === 'user');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const firstUserMessage = messages.find((m: any) => m.role === 'user');
   if (!firstUserMessage) {
     return language === 'ko' ? '새 대화' : 'New Chat';
   }
   
   // Truncate to first 50 characters or first sentence
-  let title = firstUserMessage.content;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let title = (firstUserMessage as any).content || '';
   const maxLength = 50;
   
   if (title.length > maxLength) {

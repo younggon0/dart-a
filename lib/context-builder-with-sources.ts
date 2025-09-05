@@ -58,8 +58,8 @@ export class ContextBuilderWithSources {
       confidence: metadata.confidence || 0.5,
       statementType: metadata.statement_type,
       dataPoints,
-      relevanceScore: metadata.relevance_score,
-      tableData: table.data
+      relevanceScore: metadata.relevance_score as number | undefined,
+      tableData: Array.isArray(table.data) ? table.data : undefined
     };
   }
 
@@ -76,7 +76,7 @@ export class ContextBuilderWithSources {
     // Look for key financial metrics in the data
     const keyMetrics = ['영업이익', '매출액', '당기순이익', '자산', '부채', 'revenue', 'profit'];
     
-    table.data.forEach((row: any, rowIndex: number) => {
+    table.data.forEach((row: unknown, rowIndex: number) => {
       if (Array.isArray(row) && row.length > 0) {
         const firstCell = String(row[0] || '').toLowerCase();
         
@@ -102,7 +102,7 @@ export class ContextBuilderWithSources {
   /**
    * Format a value for display
    */
-  private formatValue(value: any): string {
+  private formatValue(value: unknown): string {
     if (typeof value === 'number') {
       // Format large numbers
       if (value >= 1000000) {

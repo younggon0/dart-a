@@ -5,14 +5,19 @@ import ChatInterface from '@/components/chat/ChatInterface';
 import CompanySelector from '@/components/company/CompanySelector';
 import { SettingsModal } from '@/components/settings/SettingsModal';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, Menu, X, History, BarChart3, Settings, Download, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { TrendingUp, History, BarChart3, Settings, Download, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getChatHistory, deleteChatSession, formatRelativeTime, ChatSession } from '@/lib/chatHistory';
 
 export default function Home() {
   const [selectedCompany, setSelectedCompany] = useState<{ name: string; code: string } | null>(null);
   const [language, setLanguage] = useState<'en' | 'ko'>('en');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [messages, setMessages] = useState<any[]>([]);
+  interface Message {
+    role: string;
+    content: string;
+    timestamp: string | Date;
+  }
+  const [messages, setMessages] = useState<Message[]>([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
