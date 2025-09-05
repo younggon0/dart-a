@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ChevronRight, Sparkles, RefreshCw, User, Bot } from 'lucide-react';
+import { ChevronRight, Sparkles, User, Bot } from 'lucide-react';
 import { SourcePanel } from '@/components/sources/SourcePanel';
 import { SourceReference } from '@/types/source';
 import { saveChatSession, generateChatTitle, ChatSession } from '@/lib/chatHistory';
@@ -99,10 +99,27 @@ export default function ChatInterface({
     }
   }, []);
 
-  // Handle loading a specific session
+  // Handle loading a specific session or creating new chat
   useEffect(() => {
     if (loadSessionId) {
       console.log('ChatInterface loading session:', loadSessionId);
+      
+      // Check if this is a new chat signal
+      if (loadSessionId.startsWith('NEW_CHAT_')) {
+        const newSessionId = loadSessionId.replace('NEW_CHAT_', '');
+        console.log('Creating new chat with ID:', newSessionId);
+        
+        // Clear everything
+        setMessages([]);
+        setSessionId(newSessionId);
+        setInput('');
+        setShowAllQueries(false);
+        localStorage.setItem('chatSessionId', newSessionId);
+        localStorage.removeItem('chatMessages');
+        return;
+      }
+      
+      // Otherwise load existing session
       const history = localStorage.getItem('chatHistory');
       if (history) {
         try {
@@ -411,16 +428,6 @@ export default function ChatInterface({
         </div>
       </form>
 
-      {/* Floating Action Button for Clear Chat */}
-      {messages.length > 0 && (
-        <button
-          onClick={handleClearChat}
-          className="absolute bottom-32 right-6 p-2.5 bg-destructive hover:bg-destructive/90 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 group"
-          title="Clear Chat"
-        >
-          <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-300" />
-        </button>
-      )}
     </div>
   );
 }

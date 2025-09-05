@@ -5,7 +5,7 @@ import ChatInterface from '@/components/chat/ChatInterface';
 import CompanySelector from '@/components/company/CompanySelector';
 import { SettingsModal } from '@/components/settings/SettingsModal';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, Menu, X, History, BarChart3, FileText, Settings, Download, Trash2 } from 'lucide-react';
+import { TrendingUp, Menu, X, History, BarChart3, Settings, Download, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getChatHistory, deleteChatSession, formatRelativeTime, ChatSession } from '@/lib/chatHistory';
 
 export default function Home() {
@@ -62,6 +62,8 @@ export default function Home() {
   };
 
   const handleNewChat = () => {
+    console.log('Creating new chat...');
+    
     // Clear messages
     setMessages([]);
     localStorage.removeItem('chatMessages');
@@ -75,8 +77,8 @@ export default function Home() {
       });
     localStorage.setItem('chatSessionId', newSessionId);
     
-    // Clear selected session
-    setSelectedSessionId(null);
+    // Trigger a special session ID to signal new chat
+    setSelectedSessionId('NEW_CHAT_' + newSessionId);
   };
 
   // Export chat functionality
@@ -110,20 +112,7 @@ export default function Home() {
     <main className="flex min-h-screen flex-col">
       <header className="bg-white/80 backdrop-blur-md border-b border-border/50 shadow-sm z-10">
         <div className="flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-4">
-            {/* Sidebar Toggle */}
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-lg hover:bg-muted transition-all duration-200 group"
-              aria-label="Toggle sidebar"
-            >
-              {sidebarOpen ? (
-                <X className="h-5 w-5 transition-transform duration-200 group-hover:rotate-90" />
-              ) : (
-                <Menu className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
-              )}
-            </button>
-            
+          <div className="flex items-center gap-3">
             {/* Logo and Title */}
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-md">
@@ -159,16 +148,16 @@ export default function Home() {
         </div>
       </header>
       
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
         {/* Collapsible Sidebar */}
         <aside 
           className={`${
             sidebarOpen ? 'w-72' : 'w-0'
-          } border-r bg-white/95 backdrop-blur-sm overflow-hidden transition-all duration-300 ease-in-out shadow-sm`}
+          } border-r bg-white/95 backdrop-blur-sm overflow-hidden transition-all duration-300 ease-in-out shadow-sm relative`}
         >
           <div className={`${sidebarOpen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 h-full overflow-y-auto`}>
             <div className="p-6">
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* Data Source Section */}
               <div>
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -179,26 +168,6 @@ export default function Home() {
                   selectedCompany={selectedCompany || undefined}
                   onCompanyChange={setSelectedCompany}
                 />
-              </div>
-
-              {/* Quick Stats Section */}
-              <div>
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <TrendingUp className="h-3.5 w-3.5" />
-                  Quick Stats
-                </h3>
-                <div className="space-y-2">
-                  <div className="stats-card-blue p-3 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 hover:shadow-md transition-all duration-200 cursor-pointer group">
-                    <div className="text-xs text-blue-600 dark:text-blue-400 font-medium">Revenue (2024)</div>
-                    <div className="text-lg font-bold text-blue-900 dark:text-blue-200 group-hover:scale-105 transition-transform duration-200 origin-left">₩300.87T</div>
-                    <div className="text-xs text-blue-600 dark:text-blue-400">+16.2% YoY</div>
-                  </div>
-                  <div className="stats-card-green p-3 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl border border-green-200/50 hover:shadow-md transition-all duration-200 cursor-pointer group">
-                    <div className="text-xs text-green-600 dark:text-green-400 font-medium">Operating Profit</div>
-                    <div className="text-lg font-bold text-green-900 dark:text-green-200 group-hover:scale-105 transition-transform duration-200 origin-left">₩32.73T</div>
-                    <div className="text-xs text-green-600 dark:text-green-400">+398.5% YoY</div>
-                  </div>
-                </div>
               </div>
 
               {/* Chat History Section */}
@@ -276,7 +245,31 @@ export default function Home() {
             </div>
             </div>
           </div>
+          
+          {/* Sidebar Toggle Button - Floating Edge Button */}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className={`absolute top-[50vh] -translate-y-1/2 -right-3 z-10 bg-primary dark:bg-primary/80 text-primary-foreground
+              rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-200 group hover:scale-110
+              ${!sidebarOpen ? 'translate-x-0' : ''}`}
+            aria-label="Toggle sidebar"
+          >
+            <ChevronLeft className="h-4 w-4 transition-transform duration-200" />
+          </button>
         </aside>
+        
+        {/* Floating Toggle Button for Closed Sidebar */}
+        {!sidebarOpen && (
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="absolute left-3 top-[50vh] -translate-y-1/2 z-20 bg-primary dark:bg-primary/80 text-primary-foreground
+              rounded-full p-2 shadow-lg hover:shadow-xl transition-all duration-200 group hover:scale-110
+              animate-fade-in"
+            aria-label="Open sidebar"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        )}
         
         <div className="flex-1 overflow-hidden">
           <ChatInterface 
