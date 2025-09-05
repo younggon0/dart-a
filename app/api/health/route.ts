@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { pool } from '@/lib/db';
+import { testConnection } from '@/lib/db';
 
 export async function GET() {
   const health = {
@@ -13,8 +13,10 @@ export async function GET() {
 
   // Check database connection
   try {
-    await pool.query('SELECT 1');
-    health.checks.database = true;
+    health.checks.database = await testConnection();
+    if (!health.checks.database) {
+      health.status = 'degraded';
+    }
   } catch (error) {
     health.status = 'degraded';
     console.error('Database health check failed:', error);
