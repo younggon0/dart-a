@@ -9,6 +9,14 @@ GIT_REPO="git@github.com:younggon0/dart-e.git"
 
 echo "🚀 Deploying DART-E to Mac mini"
 
+# Copy .env.local to Mac mini if it exists locally
+if [ -f .env.local ]; then
+    echo "📤 Copying .env.local to Mac mini..."
+    ssh $MINI_USER@$MINI_HOST "mkdir -p ~/deploy/dart-e"
+    scp .env.local $MINI_USER@$MINI_HOST:~/deploy/dart-e/.env.local
+    echo "✅ Environment file copied"
+fi
+
 # SSH to mini and deploy
 echo "🔗 Connecting to Mac mini..."
 ssh $MINI_USER@$MINI_HOST << ENDSSH
@@ -31,9 +39,11 @@ ssh $MINI_USER@$MINI_HOST << ENDSSH
     
     cd ~/deploy/dart-e
     
-    # Create .env.local if it doesn't exist
-    if [ ! -f .env.local ]; then
-        echo "📝 Creating .env.local file..."
+    # Check for .env.local (either copied from local or existing)
+    if [ -f .env.local ]; then
+        echo "✅ Using existing .env.local"
+    else
+        echo "📝 Creating template .env.local file..."
         cat > .env.local << 'EOF'
 # Database - use host.containers.internal for container to host connection
 DATABASE_URL=postgresql://eric@host.containers.internal:5432/dart
