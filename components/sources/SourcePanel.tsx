@@ -6,14 +6,17 @@ import { SourceReference } from '@/types/source';
 import { SourceCard } from './SourceCard';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/translations';
 
 interface SourcePanelProps {
   sources: SourceReference[];
   className?: string;
   variant?: 'inline' | 'sidebar' | 'expandable';
+  language?: 'en' | 'ko';
 }
 
-export function SourcePanel({ sources, className, variant = 'expandable' }: SourcePanelProps) {
+export function SourcePanel({ sources, className, variant = 'expandable', language = 'en' }: SourcePanelProps) {
+  const t = useTranslation(language);
   const [expanded, setExpanded] = useState(false);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
@@ -39,7 +42,7 @@ export function SourcePanel({ sources, className, variant = 'expandable' }: Sour
       <div className={cn("mt-4 space-y-2", className)}>
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <FileSearch className="h-4 w-4" />
-          <span className="font-medium">Sources ({sources.length})</span>
+          <span className="font-medium">{language === 'ko' ? `출처 (${sources.length})` : `Sources (${sources.length})`}</span>
         </div>
         <div className="space-y-2">
           {sources.map((source, index) => (
@@ -68,7 +71,7 @@ export function SourcePanel({ sources, className, variant = 'expandable' }: Sour
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FileSearch className="h-5 w-5" />
-              <h3 className="font-semibold">Sources Used</h3>
+              <h3 className="font-semibold">{language === 'ko' ? '사용된 출처' : 'Sources Used'}</h3>
             </div>
             <Button
               variant="ghost"
@@ -105,7 +108,7 @@ export function SourcePanel({ sources, className, variant = 'expandable' }: Sour
           className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 transition-colors"
         >
           <FileSearch className="h-4 w-4" />
-          <span>View Sources ({sources.length})</span>
+          <span>{t.chat.viewSources(sources.length)}</span>
           <ChevronRight className="h-3 w-3" />
         </button>
       ) : (
@@ -113,13 +116,13 @@ export function SourcePanel({ sources, className, variant = 'expandable' }: Sour
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <FileSearch className="h-4 w-4" />
-              <span className="font-medium">Sources Used</span>
+              <span className="font-medium">{language === 'ko' ? '사용된 출처' : 'Sources Used'}</span>
             </div>
             <button
               onClick={() => setExpanded(false)}
               className="text-sm text-gray-500 hover:text-gray-700"
             >
-              Hide
+              {language === 'ko' ? '숨기기' : 'Hide'}
             </button>
           </div>
           <div className="space-y-2">

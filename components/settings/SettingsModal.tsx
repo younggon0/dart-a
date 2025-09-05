@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTranslation } from '@/lib/translations';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface SettingsModalProps {
 }
 
 export function SettingsModal({ isOpen, onClose, language, onLanguageChange }: SettingsModalProps) {
+  const t = useTranslation(language);
   const [darkMode, setDarkMode] = useState(false);
   const [autoExport, setAutoExport] = useState(false);
   
@@ -58,10 +60,10 @@ export function SettingsModal({ isOpen, onClose, language, onLanguageChange }: S
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[90vw] max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{language === 'ko' ? '설정' : 'Settings'}</DialogTitle>
+          <DialogTitle>{t.settings.title}</DialogTitle>
           <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
             <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t.settings.close}</span>
           </DialogClose>
         </DialogHeader>
         
@@ -69,13 +71,13 @@ export function SettingsModal({ isOpen, onClose, language, onLanguageChange }: S
           {/* Theme Settings */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              {language === 'ko' ? '테마' : 'Theme'}
+              {t.settings.theme}
             </h3>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {darkMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
                 <Label htmlFor="dark-mode">
-                  {language === 'ko' ? '다크 모드' : 'Dark Mode'}
+                  {t.settings.darkMode}
                 </Label>
               </div>
               <Switch
@@ -89,13 +91,13 @@ export function SettingsModal({ isOpen, onClose, language, onLanguageChange }: S
           {/* Language Settings */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              {language === 'ko' ? '언어' : 'Language'}
+              {t.settings.language}
             </h3>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4" />
                 <Label htmlFor="language-select">
-                  {language === 'ko' ? '인터페이스 언어' : 'Interface Language'}
+                  {t.settings.interfaceLanguage}
                 </Label>
               </div>
               <Select value={language} onValueChange={handleLanguageChange}>
@@ -103,8 +105,8 @@ export function SettingsModal({ isOpen, onClose, language, onLanguageChange }: S
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="ko">한국어</SelectItem>
+                  <SelectItem value="en">{t.header.languageToggle.english}</SelectItem>
+                  <SelectItem value="ko">{t.header.languageToggle.korean}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -113,11 +115,11 @@ export function SettingsModal({ isOpen, onClose, language, onLanguageChange }: S
           {/* Export Settings */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              {language === 'ko' ? '내보내기' : 'Export'}
+              {t.settings.export}
             </h3>
             <div className="flex items-center justify-between">
               <Label htmlFor="auto-export">
-                {language === 'ko' ? '새 대화 시작 시 자동 내보내기' : 'Auto-export on new chat'}
+                {t.settings.autoExport}
               </Label>
               <Switch
                 id="auto-export"
@@ -130,15 +132,13 @@ export function SettingsModal({ isOpen, onClose, language, onLanguageChange }: S
           {/* About Section */}
           <div className="space-y-2 pt-4 border-t">
             <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              {language === 'ko' ? '정보' : 'About'}
+              {t.settings.about}
             </h3>
             <p className="text-sm text-muted-foreground">
-              DART-E Intelligence v1.0
+              {t.settings.version}
             </p>
             <p className="text-xs text-muted-foreground">
-              {language === 'ko' 
-                ? '한국 금융 데이터 분석 플랫폼' 
-                : 'Korean Financial Data Analytics Platform'}
+              {t.settings.description}
             </p>
           </div>
         </div>

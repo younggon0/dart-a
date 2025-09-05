@@ -7,10 +7,12 @@ import { SettingsModal } from '@/components/settings/SettingsModal';
 import { Button } from '@/components/ui/button';
 import { TrendingUp, History, BarChart3, Settings, Download, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getChatHistory, deleteChatSession, formatRelativeTime, ChatSession } from '@/lib/chatHistory';
+import { useTranslation } from '@/lib/translations';
 
 export default function Home() {
   const [selectedCompany, setSelectedCompany] = useState<{ name: string; code: string } | null>(null);
   const [language, setLanguage] = useState<'en' | 'ko'>('en');
+  const t = useTranslation(language);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   interface Message {
     role: string;
@@ -89,7 +91,7 @@ export default function Home() {
   // Export chat functionality
   const handleExportChat = () => {
     if (messages.length === 0) {
-      alert(language === 'ko' ? '내보낼 대화가 없습니다.' : 'No chat to export.');
+      alert(t.chat.noChatsToExport);
       return;
     }
 
@@ -124,8 +126,8 @@ export default function Home() {
                 <TrendingUp className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">DART-E Intelligence</h1>
-                <p className="text-xs text-muted-foreground">Financial Analytics Platform</p>
+                <h1 className="text-xl font-bold">{t.header.title}</h1>
+                <p className="text-xs text-muted-foreground">{t.header.subtitle}</p>
               </div>
             </div>
           </div>
@@ -138,7 +140,7 @@ export default function Home() {
                   onClick={() => setLanguage('en')}
                   className={language === 'en' ? 'rounded-full shadow-sm' : 'rounded-full'}
                 >
-                  English
+                  {t.header.languageToggle.english}
                 </Button>
                 <Button
                   variant={language === 'ko' ? 'default' : 'ghost'}
@@ -146,7 +148,7 @@ export default function Home() {
                   onClick={() => setLanguage('ko')}
                   className={language === 'ko' ? 'rounded-full shadow-sm' : 'rounded-full'}
                 >
-                  한국어
+                  {t.header.languageToggle.korean}
                 </Button>
               </div>
           </div>
@@ -167,9 +169,10 @@ export default function Home() {
               <div>
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
                   <BarChart3 className="h-3.5 w-3.5" />
-                  Data Source
+                  {t.sidebar.dataSource}
                 </h3>
                 <CompanySelector
+                  language={language}
                   selectedCompany={selectedCompany || undefined}
                   onCompanyChange={setSelectedCompany}
                 />
@@ -180,19 +183,19 @@ export default function Home() {
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                     <History className="h-3.5 w-3.5" />
-                    Recent Chats
+                    {t.sidebar.recentChats}
                   </h3>
                   <button
                     onClick={handleNewChat}
                     className="text-xs text-primary hover:text-primary/80 font-medium"
                   >
-                    + New
+                    {t.sidebar.newChat}
                   </button>
                 </div>
                 <div className="space-y-1 max-h-64 overflow-y-auto">
                   {chatHistory.length === 0 ? (
                     <div className="text-xs text-muted-foreground text-center py-4">
-                      {language === 'ko' ? '저장된 대화가 없습니다' : 'No saved chats'}
+                      {t.sidebar.noSavedChats}
                     </div>
                   ) : (
                     chatHistory.slice(0, 10).map((session) => (
@@ -214,7 +217,7 @@ export default function Home() {
                         <button
                           onClick={(e) => handleDeleteSession(session.id, e)}
                           className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-destructive/10 rounded"
-                          title={language === 'ko' ? '삭제' : 'Delete'}
+                          title={t.sidebar.delete}
                         >
                           <Trash2 className="h-3 w-3 text-destructive" />
                         </button>
@@ -228,7 +231,7 @@ export default function Home() {
               <div>
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
                   <Settings className="h-3.5 w-3.5" />
-                  Quick Actions
+                  {t.sidebar.quickActions}
                 </h3>
                 <div className="space-y-2">
                   <button 
@@ -236,14 +239,14 @@ export default function Home() {
                     className="w-full flex items-center gap-2 p-2.5 hover:bg-muted rounded-lg transition-colors text-sm"
                   >
                     <Download className="h-4 w-4" />
-                    Export Chat
+                    {t.sidebar.exportChat}
                   </button>
                   <button 
                     onClick={() => setSettingsOpen(true)}
                     className="w-full flex items-center gap-2 p-2.5 hover:bg-muted rounded-lg transition-colors text-sm"
                   >
                     <Settings className="h-4 w-4" />
-                    Settings
+                    {t.sidebar.settings}
                   </button>
                 </div>
               </div>

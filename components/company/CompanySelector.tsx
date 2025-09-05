@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/select';
 import { AlertCircle, Building2, CheckCircle2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTranslation } from '@/lib/translations';
 
 interface Company {
   name: string;
@@ -24,9 +25,11 @@ interface Company {
 interface CompanySelectorProps {
   selectedCompany?: Company;
   onCompanyChange?: (company: Company) => void;
+  language?: 'en' | 'ko';
 }
 
-export default function CompanySelector({ selectedCompany, onCompanyChange }: CompanySelectorProps) {
+export default function CompanySelector({ selectedCompany, onCompanyChange, language = 'en' }: CompanySelectorProps) {
+  const t = useTranslation(language);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selected, setSelected] = useState<Company | null>(selectedCompany || null);
@@ -70,7 +73,7 @@ export default function CompanySelector({ selectedCompany, onCompanyChange }: Co
   if (isLoading) {
     return (
       <div className="space-y-2">
-        <label className="text-sm font-medium text-gray-700">Company</label>
+        <label className="text-sm font-medium text-gray-700">{t.sidebar.company}</label>
         <Skeleton className="h-10 w-full" />
       </div>
     );
@@ -78,7 +81,7 @@ export default function CompanySelector({ selectedCompany, onCompanyChange }: Co
 
   if (!companies.length) {
     return (
-      <div className="text-sm text-gray-500">No companies available</div>
+      <div className="text-sm text-gray-500">{language === 'ko' ? '사용 가능한 회사가 없습니다' : 'No companies available'}</div>
     );
   }
 
@@ -90,7 +93,7 @@ export default function CompanySelector({ selectedCompany, onCompanyChange }: Co
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <Building2 className="h-4 w-4 text-gray-600" />
-        <label className="text-sm font-medium text-gray-700">Company</label>
+        <label className="text-sm font-medium text-gray-700">{t.sidebar.company}</label>
       </div>
       
       <Select value={selected?.code || ''} onValueChange={handleCompanyChange}>
@@ -103,7 +106,7 @@ export default function CompanySelector({ selectedCompany, onCompanyChange }: Co
                 ) : (
                   <AlertCircle className="h-4 w-4 text-gray-400" />
                 )}
-                <span>{selected.name}</span>
+                <span>{language === 'ko' && selected.nameKo ? selected.nameKo : selected.name}</span>
               </div>
             )}
           </SelectValue>

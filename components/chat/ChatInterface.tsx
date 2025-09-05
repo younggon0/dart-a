@@ -8,6 +8,7 @@ import { ChevronRight, Sparkles, User, Bot } from 'lucide-react';
 import { SourcePanel } from '@/components/sources/SourcePanel';
 import { SourceReference } from '@/types/source';
 import { saveChatSession, generateChatTitle, ChatSession } from '@/lib/chatHistory';
+import { useTranslation, formatTimestamp } from '@/lib/translations';
 
 interface Message {
   id: string;
@@ -53,6 +54,7 @@ export default function ChatInterface({
   onMessagesChange,
   loadSessionId
 }: ChatInterfaceProps) {
+  const t = useTranslation(language);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -228,7 +230,7 @@ export default function ChatInterface({
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Sorry, I encountered an error processing your request.',
+        content: t.chat.errorMessage,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -250,12 +252,10 @@ export default function ChatInterface({
                   </div>
                 </div>
                 <h2 className="text-2xl font-bold text-foreground mb-2">
-                  {language === 'ko' ? '무엇을 도와드릴까요?' : 'How can I help you today?'}
+                  {t.chat.howCanIHelp}
                 </h2>
                 <p className="text-muted-foreground mb-8">
-                  {language === 'ko' 
-                    ? '삼성전자의 재무 데이터에 대해 물어보세요'
-                    : 'Ask me about Samsung Electronics financial data'}
+                  {t.chat.askAboutFinancialData}
                 </p>
               </div>
             </div>
@@ -295,12 +295,11 @@ export default function ChatInterface({
                         sources={message.sources}
                         variant="expandable"
                         className="mt-3"
+                        language={language}
                       />
                     )}
                     <div className={`text-xs mt-2 ${message.role === 'user' ? 'text-white/70' : 'text-muted-foreground'}`}>
-                      {message.timestamp instanceof Date 
-                        ? message.timestamp.toLocaleTimeString() 
-                        : new Date(message.timestamp).toLocaleTimeString()}
+                      {formatTimestamp(message.timestamp, language)}
                     </div>
                   </div>
                 </div>
@@ -318,7 +317,7 @@ export default function ChatInterface({
               <div className="message-assistant max-w-[70%]">
                 <div className="p-4">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">Thinking</span>
+                    <span className="text-sm text-muted-foreground">{t.chat.thinking}</span>
                     <div className="flex gap-1">
                       <span className="inline-block w-2 h-2 bg-muted-foreground/40 rounded-full animate-pulse"></span>
                       <span className="inline-block w-2 h-2 bg-muted-foreground/40 rounded-full animate-pulse [animation-delay:200ms]"></span>
@@ -337,7 +336,7 @@ export default function ChatInterface({
         <div className="border-t px-4 pt-3 pb-2">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-xs font-medium text-muted-foreground">
-              {language === 'ko' ? '빠른 질문' : 'Quick queries'}
+              {t.chat.quickQueries}
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -363,7 +362,7 @@ export default function ChatInterface({
                          bg-transparent hover:bg-muted text-muted-foreground text-sm
                          transition-colors duration-200"
               >
-                <span>+{queries.length - 3} more</span>
+                <span>{t.chat.showMore(queries.length - 3)}</span>
               </button>
             )}
             {showAllQueries && (
@@ -373,7 +372,7 @@ export default function ChatInterface({
                          bg-transparent hover:bg-muted text-muted-foreground text-sm
                          transition-colors duration-200"
               >
-                <span>Show less</span>
+                <span>{t.chat.showLess}</span>
               </button>
             )}
           </div>
@@ -391,9 +390,7 @@ export default function ChatInterface({
                 handleSubmit();
               }
             }}
-            placeholder={language === 'ko' 
-              ? "재무 데이터에 대해 물어보세요..."
-              : "Ask about financial data..."}
+            placeholder={t.chat.placeholder}
             className="min-h-[60px] resize-none rounded-xl border-border/50 bg-background/80 focus:bg-background dark:bg-muted dark:focus:bg-muted-foreground/10 transition-all"
             disabled={isLoading}
           />
@@ -402,7 +399,7 @@ export default function ChatInterface({
             disabled={!input.trim() || isLoading}
             className="self-end rounded-xl px-6 shadow-sm hover:shadow-md transition-all"
           >
-            {isLoading ? 'Sending...' : 'Send'}
+            {isLoading ? t.chat.sending : t.chat.send}
           </Button>
         </div>
       </form>
