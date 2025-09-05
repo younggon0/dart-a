@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ChevronRight, Sparkles, RefreshCw } from 'lucide-react';
+import { ChevronRight, Sparkles, RefreshCw, User, Bot } from 'lucide-react';
 import { SourcePanel } from '@/components/sources/SourcePanel';
 import { SourceReference } from '@/types/source';
 
@@ -192,69 +192,89 @@ export default function ChatInterface({ language = 'en' }: ChatInterfaceProps) {
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
         <div className="space-y-4">
           {messages.length === 0 ? (
-            <div className="text-center text-gray-500 mt-8">
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <Sparkles className="h-5 w-5 text-yellow-500" />
-                <p className="text-lg font-medium text-gray-700">
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="text-center max-w-md mx-auto">
+                <div className="mb-6">
+                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl mx-auto flex items-center justify-center shadow-lg">
+                    <Sparkles className="h-8 w-8 text-white" />
+                  </div>
+                </div>
+                <h2 className="text-2xl font-bold text-foreground mb-2">
                   {language === 'ko' ? '무엇을 도와드릴까요?' : 'How can I help you today?'}
+                </h2>
+                <p className="text-muted-foreground mb-8">
+                  {language === 'ko' 
+                    ? '삼성전자의 재무 데이터에 대해 물어보세요'
+                    : 'Ask me about Samsung Electronics financial data'}
                 </p>
               </div>
-              <p className="text-sm text-gray-500 mb-6">
-                {language === 'ko' 
-                  ? '재무 데이터에 대해 물어보세요'
-                  : 'Ask me about financial data'}
-              </p>
             </div>
           ) : (
             messages.map(message => (
               <div
                 key={message.id}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
+                className={`flex gap-3 ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
               >
+                {/* Avatar */}
+                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                  message.role === 'user' 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-accent text-accent-foreground'
+                }`}>
+                  {message.role === 'user' ? (
+                    <User className="h-4 w-4" />
+                  ) : (
+                    <Bot className="h-4 w-4" />
+                  )}
+                </div>
+
+                {/* Message Content */}
                 <div
-                  className={`max-w-[80%] p-4 ${
+                  className={`max-w-[70%] ${
                     message.role === 'user' 
                       ? 'message-user' 
                       : 'message-assistant'
                   }`}
                 >
-                  <div className="flex items-start gap-3">
-                    <Badge 
-                      variant={message.role === 'user' ? 'default' : 'secondary'}
-                      className={message.role === 'user' ? 'bg-white/20 text-white border-0' : ''}
-                    >
-                      {message.role === 'user' ? 'You' : 'Assistant'}
-                    </Badge>
-                    <div className="flex-1">
-                      <p className={`text-sm whitespace-pre-wrap ${message.role === 'user' ? 'text-white' : ''}`}>{message.content}</p>
-                      {message.sources && message.sources.length > 0 && (
-                        <SourcePanel 
-                          sources={message.sources}
-                          variant="expandable"
-                          className="mt-3"
-                        />
-                      )}
+                  <div className="p-4">
+                    <p className={`text-sm whitespace-pre-wrap leading-relaxed ${message.role === 'user' ? 'text-white' : 'text-foreground'}`}>
+                      {message.content}
+                    </p>
+                    {message.sources && message.sources.length > 0 && (
+                      <SourcePanel 
+                        sources={message.sources}
+                        variant="expandable"
+                        className="mt-3"
+                      />
+                    )}
+                    <div className={`text-xs mt-2 ${message.role === 'user' ? 'text-white/70' : 'text-muted-foreground'}`}>
+                      {message.timestamp.toLocaleTimeString()}
                     </div>
-                  </div>
-                  <div className="text-xs text-muted-foreground/60 mt-2">
-                    {message.timestamp.toLocaleTimeString()}
                   </div>
                 </div>
               </div>
             ))
           )}
           {isLoading && (
-            <div className="flex justify-start">
-              <Card className="p-3 bg-gray-50 border-gray-200">
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary">Assistant</Badge>
-                  <div className="flex gap-1">
-                    <span className="animate-bounce">●</span>
-                    <span className="animate-bounce delay-100">●</span>
-                    <span className="animate-bounce delay-200">●</span>
+            <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              {/* Avatar */}
+              <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-accent text-accent-foreground">
+                <Bot className="h-4 w-4" />
+              </div>
+              
+              {/* Typing Indicator */}
+              <div className="message-assistant max-w-[70%]">
+                <div className="p-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Thinking</span>
+                    <div className="flex gap-1">
+                      <span className="inline-block w-2 h-2 bg-muted-foreground/40 rounded-full animate-pulse"></span>
+                      <span className="inline-block w-2 h-2 bg-muted-foreground/40 rounded-full animate-pulse [animation-delay:200ms]"></span>
+                      <span className="inline-block w-2 h-2 bg-muted-foreground/40 rounded-full animate-pulse [animation-delay:400ms]"></span>
+                    </div>
                   </div>
                 </div>
-              </Card>
+              </div>
             </div>
           )}
         </div>
@@ -273,13 +293,14 @@ export default function ChatInterface({ language = 'en' }: ChatInterfaceProps) {
               <button
                 key={index}
                 onClick={() => handleQuickQuery(query.query)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                         bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm
-                         transition-colors duration-200 group"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl
+                         bg-white border border-border hover:border-primary/50 hover:bg-primary/5
+                         text-foreground text-sm font-medium
+                         transition-all duration-200 group shadow-sm hover:shadow-md"
               >
-                <span className="text-base">{query.icon}</span>
+                <span className="text-lg">{query.icon}</span>
                 <span>{query.label}</span>
-                <ChevronRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <ChevronRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-0.5" />
               </button>
             ))}
             {!showAllQueries && queries.length > 3 && (
