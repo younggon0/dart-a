@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { ChevronRight, Sparkles, RefreshCw, User, Bot } from 'lucide-react';
 import { SourcePanel } from '@/components/sources/SourcePanel';
 import { SourceReference } from '@/types/source';
+import { saveChatSession, generateChatTitle, ChatSession } from '@/lib/chatHistory';
 
 interface Message {
   id: string;
@@ -28,6 +29,7 @@ interface QuickQuery {
 interface ChatInterfaceProps {
   language?: 'en' | 'ko';
   onMessagesChange?: (messages: Message[]) => void;
+  loadSessionId?: string | null;
 }
 
 const ENGLISH_QUERIES: QuickQuery[] = [
@@ -48,7 +50,11 @@ const KOREAN_QUERIES: QuickQuery[] = [
   { label: '연구개발비', query: '최근 연구개발비 투자 규모와 매출 대비 비율을 보여주세요', icon: '🔬' },
 ];
 
-export default function ChatInterface({ language = 'en', onMessagesChange }: ChatInterfaceProps) {
+export default function ChatInterface({ 
+  language = 'en', 
+  onMessagesChange,
+  loadSessionId
+}: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -93,16 +99,60 @@ export default function ChatInterface({ language = 'en', onMessagesChange }: Cha
     }
   }, []);
 
-  // Save messages to localStorage whenever they change
+  // Handle loading a specific session
+  useEffect(() => {
+    if (loadSessionId) {
+      console.log('ChatInterface loading session:', loadSessionId);
+      const history = localStorage.getItem('chatHistory');
+      if (history) {
+        try {
+          const sessions = JSON.parse(history);
+          const session = sessions.find((s: ChatSession) => s.id === loadSessionId);
+          if (session) {
+            console.log('Found session, loading messages:', session.messages.length);
+            // Parse timestamps when loading from history
+            const messagesWithDates = session.messages.map((msg: any) => ({
+              ...msg,
+              timestamp: new Date(msg.timestamp)
+            }));
+            setMessages(messagesWithDates);
+            setSessionId(session.id);
+            localStorage.setItem('chatSessionId', session.id);
+            localStorage.setItem('chatMessages', JSON.stringify(session.messages));
+            
+            // Clear input and reset UI
+            setInput('');
+            setShowAllQueries(false);
+          } else {
+            console.log('Session not found in history');
+          }
+        } catch (e) {
+          console.error('Failed to load session:', e);
+        }
+      }
+    }
+  }, [loadSessionId]);
+
+  // Save messages to localStorage and history whenever they change
   useEffect(() => {
     if (messages.length > 0) {
       localStorage.setItem('chatMessages', JSON.stringify(messages));
+      
+      // Save to chat history
+      const session: ChatSession = {
+        id: sessionId,
+        title: generateChatTitle(messages, language),
+        timestamp: Date.now(),
+        messages: messages,
+        language: language
+      };
+      saveChatSession(session);
     }
     // Notify parent component of message changes
     if (onMessagesChange) {
       onMessagesChange(messages);
     }
-  }, [messages, onMessagesChange]);
+  }, [messages, onMessagesChange, sessionId, language]);
 
   useEffect(() => {
     // Scroll to bottom when messages change
@@ -253,7 +303,9 @@ export default function ChatInterface({ language = 'en', onMessagesChange }: Cha
                       />
                     )}
                     <div className={`text-xs mt-2 ${message.role === 'user' ? 'text-white/70' : 'text-muted-foreground'}`}>
-                      {message.timestamp.toLocaleTimeString()}
+                      {message.timestamp instanceof Date 
+                        ? message.timestamp.toLocaleTimeString() 
+                        : new Date(message.timestamp).toLocaleTimeString()}
                     </div>
                   </div>
                 </div>

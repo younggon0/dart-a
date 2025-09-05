@@ -5,7 +5,8 @@ import ChatInterface from '@/components/chat/ChatInterface';
 import CompanySelector from '@/components/company/CompanySelector';
 import { SettingsModal } from '@/components/settings/SettingsModal';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, Menu, X, History, BarChart3, FileText, Settings, Download } from 'lucide-react';
+import { TrendingUp, Menu, X, History, BarChart3, FileText, Settings, Download, Trash2 } from 'lucide-react';
+import { getChatHistory, deleteChatSession, formatRelativeTime, ChatSession } from '@/lib/chatHistory';
 
 export default function Home() {
   const [selectedCompany, setSelectedCompany] = useState<{ name: string; code: string } | null>(null);
@@ -13,8 +14,10 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [messages, setMessages] = useState<any[]>([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
 
-  // Load messages from localStorage on mount
+  // Load messages and chat history on mount
   useEffect(() => {
     const storedMessages = localStorage.getItem('chatMessages');
     if (storedMessages) {
@@ -25,7 +28,56 @@ export default function Home() {
         console.error('Failed to load messages:', e);
       }
     }
+    
+    // Load chat history
+    loadChatHistory();
+    
+    // Refresh chat history periodically
+    const interval = setInterval(loadChatHistory, 5000); // Every 5 seconds
+    
+    return () => clearInterval(interval);
   }, []);
+
+  const loadChatHistory = () => {
+    const history = getChatHistory();
+    setChatHistory(history);
+  };
+
+  const handleLoadSession = (sessionId: string) => {
+    console.log('Loading session:', sessionId);
+    
+    // Toggle the selectedSessionId to force re-trigger the effect
+    setSelectedSessionId(null);
+    setTimeout(() => {
+      setSelectedSessionId(sessionId);
+    }, 10);
+  };
+
+  const handleDeleteSession = (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the load action
+    if (confirm(language === 'ko' ? '이 대화를 삭제하시겠습니까?' : 'Delete this chat?')) {
+      deleteChatSession(sessionId);
+      loadChatHistory();
+    }
+  };
+
+  const handleNewChat = () => {
+    // Clear messages
+    setMessages([]);
+    localStorage.removeItem('chatMessages');
+    
+    // Generate new session ID
+    const newSessionId = crypto.randomUUID ? crypto.randomUUID() : 
+      'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    localStorage.setItem('chatSessionId', newSessionId);
+    
+    // Clear selected session
+    setSelectedSessionId(null);
+  };
 
   // Export chat functionality
   const handleExportChat = () => {
@@ -151,23 +203,50 @@ export default function Home() {
 
               {/* Chat History Section */}
               <div>
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <History className="h-3.5 w-3.5" />
-                  Recent Chats
-                </h3>
-                <div className="space-y-1">
-                  <button className="chat-history-item w-full text-left p-2.5 hover:bg-muted rounded-lg transition-colors text-sm text-muted-foreground">
-                    <div className="font-medium text-foreground truncate">Revenue Analysis</div>
-                    <div className="text-xs opacity-75">2 hours ago</div>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                    <History className="h-3.5 w-3.5" />
+                    Recent Chats
+                  </h3>
+                  <button
+                    onClick={handleNewChat}
+                    className="text-xs text-primary hover:text-primary/80 font-medium"
+                  >
+                    + New
                   </button>
-                  <button className="chat-history-item w-full text-left p-2.5 hover:bg-muted rounded-lg transition-colors text-sm text-muted-foreground">
-                    <div className="font-medium text-foreground truncate">Cash Flow Statement</div>
-                    <div className="text-xs opacity-75">Yesterday</div>
-                  </button>
-                  <button className="chat-history-item w-full text-left p-2.5 hover:bg-muted rounded-lg transition-colors text-sm text-muted-foreground">
-                    <div className="font-medium text-foreground truncate">Balance Sheet Review</div>
-                    <div className="text-xs opacity-75">2 days ago</div>
-                  </button>
+                </div>
+                <div className="space-y-1 max-h-64 overflow-y-auto">
+                  {chatHistory.length === 0 ? (
+                    <div className="text-xs text-muted-foreground text-center py-4">
+                      {language === 'ko' ? '저장된 대화가 없습니다' : 'No saved chats'}
+                    </div>
+                  ) : (
+                    chatHistory.slice(0, 10).map((session) => (
+                      <div
+                        key={session.id}
+                        className="chat-history-item group relative"
+                      >
+                        <button
+                          onClick={() => handleLoadSession(session.id)}
+                          className="w-full text-left p-2.5 pr-8 hover:bg-muted rounded-lg transition-colors text-sm text-muted-foreground"
+                        >
+                          <div className="font-medium text-foreground truncate pr-2">
+                            {session.title}
+                          </div>
+                          <div className="text-xs opacity-75">
+                            {formatRelativeTime(session.timestamp, language)}
+                          </div>
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteSession(session.id, e)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-destructive/10 rounded"
+                          title={language === 'ko' ? '삭제' : 'Delete'}
+                        >
+                          <Trash2 className="h-3 w-3 text-destructive" />
+                        </button>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -203,6 +282,7 @@ export default function Home() {
           <ChatInterface 
             language={language} 
             onMessagesChange={setMessages}
+            loadSessionId={selectedSessionId}
           />
         </div>
       </div>
