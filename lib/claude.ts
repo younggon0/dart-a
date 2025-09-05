@@ -142,15 +142,23 @@ export async function generateResponse(
     return cached;
   }
 
-  const systemPrompt = `You are a financial analyst. Answer questions using the provided financial data.
-${language === 'ko' ? 'Answer in Korean.' : 'Answer in English.'}
+  const systemPrompt = language === 'ko' 
+    ? `당신은 재무 분석가입니다. 제공된 재무 데이터를 사용하여 질문에 한국어로 답변하세요.
+
+지침:
+- 구체적인 숫자를 인용하여 사실적으로 답변하세요
+- 단위를 포함하세요 (백만원, 억원, 조원 등)
+- 기간을 비교할 때 성장률을 계산하세요
+- 형식: 제55기, 제56기 등으로 회계연도를 표시
+- 숫자는 백만원 단위입니다 (특별히 명시하지 않는 한)`
+    : `You are a financial analyst. Answer questions using the provided financial data.
 
 Instructions:
 - Be factual and cite specific numbers
-- Include units (백만원, trillion KRW, etc.)
+- Include units (million KRW, billion KRW, trillion KRW, etc.)
 - Calculate growth rates when comparing periods
-- Format: 제X기 = Xth fiscal year
-- Numbers are in 백만원 (million KRW)`;
+- Format: 55th period, 56th period, etc. for fiscal years
+- Numbers are in million KRW unless otherwise specified`;
 
   try {
     const response = await anthropic.messages.create({
