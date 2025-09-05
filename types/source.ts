@@ -22,6 +22,7 @@ export interface SourceReference {
   statementType?: string;
   dataPoints: DataPoint[];
   relevanceScore?: number;
+  tableData?: any[][]; // Raw table data for viewing
 }
 
 export interface SourcedResponse {

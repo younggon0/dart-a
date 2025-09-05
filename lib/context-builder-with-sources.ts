@@ -58,7 +58,8 @@ export class ContextBuilderWithSources {
       confidence: metadata.confidence || 0.5,
       statementType: metadata.statement_type,
       dataPoints,
-      relevanceScore: metadata.relevance_score
+      relevanceScore: metadata.relevance_score,
+      tableData: table.data
     };
   }
 

@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
-import { FileText, ChevronDown, ChevronUp, CheckCircle, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { FileText, ChevronDown, ChevronUp, CheckCircle, AlertCircle, Table } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { SourceReference } from '@/types/source';
+import { TableViewer } from './TableViewer';
 import { cn } from '@/lib/utils';
 
 interface SourceCardProps {
@@ -15,6 +16,7 @@ interface SourceCardProps {
 }
 
 export function SourceCard({ source, index, expanded = false, onToggle }: SourceCardProps) {
+  const [showTable, setShowTable] = useState(false);
   const confidenceColor = source.confidence >= 0.9 ? 'text-green-600' : 
                           source.confidence >= 0.7 ? 'text-yellow-600' : 'text-orange-600';
   
@@ -95,18 +97,31 @@ export function SourceCard({ source, index, expanded = false, onToggle }: Source
             )}
 
             {/* Actions */}
-            <div className="flex gap-2 mt-4">
-              <button className="text-xs text-blue-600 hover:text-blue-800 font-medium">
-                View Table
-              </button>
-              <span className="text-gray-300">•</span>
-              <button className="text-xs text-blue-600 hover:text-blue-800 font-medium">
-                View in PDF
-              </button>
-            </div>
+            {source.tableData && source.tableData.length > 0 && (
+              <div className="mt-3">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowTable(true);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                >
+                  <Table className="h-3 w-3" />
+                  View Table
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
+      
+      <TableViewer
+        isOpen={showTable}
+        onClose={() => setShowTable(false)}
+        tableName={source.tableName || source.tableNameKo || 'Financial Table'}
+        tableData={source.tableData}
+        period={source.period}
+      />
     </Card>
   );
 }
