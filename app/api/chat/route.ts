@@ -4,6 +4,7 @@ import { smartSearch } from '@/lib/smart-search';
 import { ContextBuilderWithSources } from '@/lib/context-builder-with-sources';
 import { TableRow } from '@/types/database';
 import { SourceReference } from '@/types/source';
+import { getCacheStats } from '@/lib/cache/api-cache';
 
 export interface ChatRequest {
   message: string;
@@ -66,6 +67,10 @@ export async function POST(request: NextRequest) {
       context,
       body.language || analysis.language
     );
+    
+    // Log cache statistics
+    const cacheStats = getCacheStats();
+    console.log('Cache Stats:', cacheStats);
 
     return NextResponse.json({
       success: true,
@@ -73,6 +78,7 @@ export async function POST(request: NextRequest) {
       searchResults: searchResults.slice(0, 5),
       sources: sources.slice(0, 5), // Return top 5 sources
       analysis,
+      cacheStats, // Include cache stats in response
     });
   } catch (error) {
     console.error('Chat API error:', error);

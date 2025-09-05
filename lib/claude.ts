@@ -1,5 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { config } from './config';
+import { 
+  getCachedAnalysis, 
+  setCachedAnalysis, 
+  getCachedResponse, 
+  setCachedResponse 
+} from './cache/api-cache';
 
 const anthropic = new Anthropic({
   apiKey: config.anthropic.apiKey,
@@ -12,9 +18,15 @@ export interface QueryAnalysis {
 }
 
 /**
- * Simple query analysis using Claude
+ * Simple query analysis using Claude with caching
  */
 export async function analyzeQuery(query: string): Promise<QueryAnalysis> {
+  // Check cache first
+  const cached = getCachedAnalysis(query);
+  if (cached) {
+    return cached;
+  }
+
   try {
     // Simple prompt inline (avoiding fs in API routes)
     const prompt = `You are a financial data search expert. Analyze this query and extract key search terms.
@@ -59,14 +71,20 @@ Be concise - return 5-10 most relevant keywords.`;
     try {
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+        const result = JSON.parse(jsonMatch[0]);
+        // Cache the successful result
+        setCachedAnalysis(query, result);
+        return result;
       }
     } catch (parseError) {
       console.error('Failed to parse Claude response:', parseError);
     }
 
     // Simple fallback - extract basic concept from query
-    return getFallbackAnalysis(query);
+    const fallback = getFallbackAnalysis(query);
+    // Cache the fallback result too
+    setCachedAnalysis(query, fallback);
+    return fallback;
   } catch (error) {
     console.error('Query analysis error:', error);
     return getFallbackAnalysis(query);
@@ -111,13 +129,19 @@ function getFallbackAnalysis(query: string): QueryAnalysis {
 }
 
 /**
- * Generate response using Claude
+ * Generate response using Claude with caching
  */
 export async function generateResponse(
   query: string,
   context: string,
   language: 'en' | 'ko' = 'en'
 ): Promise<string> {
+  // Check cache first
+  const cached = getCachedResponse(query, context, language);
+  if (cached) {
+    return cached;
+  }
+
   const systemPrompt = `You are a financial analyst. Answer questions using the provided financial data.
 ${language === 'ko' ? 'Answer in Korean.' : 'Answer in English.'}
 
@@ -140,7 +164,12 @@ Instructions:
       system: systemPrompt
     });
 
-    return response.content[0].type === 'text' ? response.content[0].text : 'Unable to generate response.';
+    const result = response.content[0].type === 'text' ? response.content[0].text : 'Unable to generate response.';
+    
+    // Cache the successful response
+    setCachedResponse(query, context, language, result);
+    
+    return result;
   } catch (error) {
     console.error('Response generation error:', error);
     return language === 'ko' 
