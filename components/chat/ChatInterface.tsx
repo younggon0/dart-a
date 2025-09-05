@@ -188,22 +188,7 @@ export default function ChatInterface({ language = 'en' }: ChatInterfaceProps) {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header with Clear Chat button */}
-      {messages.length > 0 && (
-        <div className="flex justify-end p-2 border-b">
-          <Button
-            onClick={handleClearChat}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Clear Chat
-          </Button>
-        </div>
-      )}
-      
+    <div className="flex flex-col h-full relative">
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
         <div className="space-y-4">
           {messages.length === 0 ? (
@@ -344,6 +329,17 @@ export default function ChatInterface({ language = 'en' }: ChatInterfaceProps) {
           </Button>
         </div>
       </form>
+
+      {/* Floating Action Button for Clear Chat */}
+      {messages.length > 0 && (
+        <button
+          onClick={handleClearChat}
+          className="absolute bottom-32 right-6 p-2.5 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 group"
+          title="Clear Chat"
+        >
+          <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-300" />
+        </button>
+      )}
     </div>
   );
 }

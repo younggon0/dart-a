@@ -2,40 +2,13 @@
 
 import { useState } from 'react';
 import ChatInterface from '@/components/chat/ChatInterface';
-import SearchResults from '@/components/search/SearchResults';
-// Quick Queries removed - now integrated in ChatInterface
 import CompanySelector from '@/components/company/CompanySelector';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('chat');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<{ name: string; code: string } | null>(null);
   const [language, setLanguage] = useState<'en' | 'ko'>('en');
 
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleSearch = async (keywords: string[]) => {
-    try {
-      const response = await fetch('/api/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          corpCode: selectedCompany?.code || '00126380',
-          keywords,
-          limit: 10,
-        }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        setSearchResults(data.data);
-      }
-    } catch (error) {
-      console.error('Search error:', error);
-    }
-  };
 
   return (
     <main className="flex min-h-screen flex-col">
@@ -74,27 +47,7 @@ export default function Home() {
         </aside>
         
         <div className="flex-1 overflow-hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-            <div className="border-b px-6">
-              <TabsList className="h-12">
-                <TabsTrigger value="chat">Chat</TabsTrigger>
-                <TabsTrigger value="search">Search Results</TabsTrigger>
-              </TabsList>
-            </div>
-            
-            <div className="flex-1 overflow-hidden">
-              <TabsContent value="chat" className="h-full m-0">
-                <ChatInterface language={language} />
-              </TabsContent>
-              
-              <TabsContent value="search" className="h-full m-0 p-6 overflow-y-auto">
-                <SearchResults 
-                  results={searchResults}
-                  isLoading={false}
-                />
-              </TabsContent>
-            </div>
-          </Tabs>
+          <ChatInterface language={language} />
         </div>
       </div>
     </main>
