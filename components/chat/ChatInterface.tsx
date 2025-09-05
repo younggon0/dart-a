@@ -209,21 +209,24 @@ export default function ChatInterface({ language = 'en' }: ChatInterfaceProps) {
             messages.map(message => (
               <div
                 key={message.id}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
               >
-                <Card
-                  className={`max-w-[80%] p-3 ${
+                <div
+                  className={`max-w-[80%] p-4 ${
                     message.role === 'user' 
-                      ? 'bg-blue-50 border-blue-200' 
-                      : 'bg-gray-50 border-gray-200'
+                      ? 'message-user' 
+                      : 'message-assistant'
                   }`}
                 >
-                  <div className="flex items-start gap-2">
-                    <Badge variant={message.role === 'user' ? 'default' : 'secondary'}>
+                  <div className="flex items-start gap-3">
+                    <Badge 
+                      variant={message.role === 'user' ? 'default' : 'secondary'}
+                      className={message.role === 'user' ? 'bg-white/20 text-white border-0' : ''}
+                    >
                       {message.role === 'user' ? 'You' : 'Assistant'}
                     </Badge>
                     <div className="flex-1">
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      <p className={`text-sm whitespace-pre-wrap ${message.role === 'user' ? 'text-white' : ''}`}>{message.content}</p>
                       {message.sources && message.sources.length > 0 && (
                         <SourcePanel 
                           sources={message.sources}
@@ -233,10 +236,10 @@ export default function ChatInterface({ language = 'en' }: ChatInterfaceProps) {
                       )}
                     </div>
                   </div>
-                  <div className="text-xs text-gray-400 mt-2">
+                  <div className="text-xs text-muted-foreground/60 mt-2">
                     {message.timestamp.toLocaleTimeString()}
                   </div>
-                </Card>
+                </div>
               </div>
             ))
           )}
@@ -303,8 +306,8 @@ export default function ChatInterface({ language = 'en' }: ChatInterfaceProps) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="border-t p-4">
-        <div className="flex gap-2">
+      <form onSubmit={handleSubmit} className="border-t bg-white/50 backdrop-blur-sm p-4">
+        <div className="flex gap-3">
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -317,13 +320,13 @@ export default function ChatInterface({ language = 'en' }: ChatInterfaceProps) {
             placeholder={language === 'ko' 
               ? "재무 데이터에 대해 물어보세요..."
               : "Ask about financial data..."}
-            className="min-h-[60px] resize-none"
+            className="min-h-[60px] resize-none rounded-xl border-border/50 bg-white/80 focus:bg-white transition-all"
             disabled={isLoading}
           />
           <Button 
             type="submit" 
             disabled={!input.trim() || isLoading}
-            className="self-end"
+            className="self-end rounded-xl px-6 shadow-sm hover:shadow-md transition-all"
           >
             {isLoading ? 'Sending...' : 'Send'}
           </Button>
@@ -334,7 +337,7 @@ export default function ChatInterface({ language = 'en' }: ChatInterfaceProps) {
       {messages.length > 0 && (
         <button
           onClick={handleClearChat}
-          className="absolute bottom-32 right-6 p-2.5 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 group"
+          className="absolute bottom-32 right-6 p-2.5 bg-destructive hover:bg-destructive/90 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 group"
           title="Clear Chat"
         >
           <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-300" />
