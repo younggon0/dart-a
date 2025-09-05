@@ -5,11 +5,9 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY yarn.lock* ./
-COPY pnpm-lock.yaml* ./
 
 # Install dependencies
-RUN npm ci || yarn install --frozen-lockfile || pnpm install --frozen-lockfile
+RUN npm ci
 
 # Copy source code
 COPY . .

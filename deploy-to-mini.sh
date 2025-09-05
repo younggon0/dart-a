@@ -5,26 +5,15 @@
 MINI_HOST="mini"
 MINI_USER=$USER  # Your username on Mac mini
 PROJECT_PATH="~/deploy/dart-e"
-GIT_REPO="https://github.com/yourusername/dart-e.git"  # Replace with your repo URL
+GIT_REPO="git@github.com:younggon0/dart-e.git"
 
 echo "🚀 Deploying DART-E to Mac mini"
 
-# First, ensure git is initialized and push local changes
-echo "📦 Preparing local repository..."
-if [ ! -d .git ]; then
-    git init
-    git add .
-    git commit -m "Initial commit"
-fi
-
-# Push to GitHub (if you have a remote setup)
-# git push origin main
-
 # SSH to mini and deploy
 echo "🔗 Connecting to Mac mini..."
-ssh $MINI_USER@$MINI_HOST << 'ENDSSH'
+ssh $MINI_USER@$MINI_HOST << ENDSSH
     # Set PATH for Homebrew
-    export PATH=/opt/homebrew/bin:$PATH
+    export PATH=/opt/homebrew/bin:\$PATH
     
     # Ensure deploy directory exists
     mkdir -p ~/deploy
@@ -33,13 +22,11 @@ ssh $MINI_USER@$MINI_HOST << 'ENDSSH'
     if [ ! -d ~/deploy/dart-e ]; then
         echo "📥 Cloning repository..."
         cd ~/deploy
-        # For now, we'll use rsync since repo might not be on GitHub yet
-        echo "Repository not found. Please set up Git repository first."
-        exit 1
+        git clone $GIT_REPO
     else
         echo "📥 Pulling latest changes..."
         cd ~/deploy/dart-e
-        git pull origin main
+        git pull origin main 2>/dev/null || git pull origin master
     fi
     
     cd ~/deploy/dart-e
@@ -56,30 +43,34 @@ ANTHROPIC_API_KEY=your-api-key-here
 
 # App settings
 NODE_ENV=production
-NEXT_PUBLIC_API_URL=http://10.10.2.11:3000
+NEXT_PUBLIC_APP_URL=http://10.10.2.11:3000
 EOF
         echo "⚠️  Please edit .env.local with your actual API key"
     fi
     
-    # Stop existing containers
-    echo "🛑 Stopping existing containers..."
-    podman-compose down 2>/dev/null || true
+    # Ensure Podman is installed (same as DART)
+    if ! command -v podman &> /dev/null; then
+        echo "Installing Podman..."
+        brew install podman
+        podman machine init
+        podman machine start
+    fi
+    
+    if ! command -v podman-compose &> /dev/null; then
+        echo "Installing podman-compose..."
+        brew install podman-compose
+    fi
     
     # Build and run with Podman
-    echo "🔨 Building container..."
+    echo "🔨 Building and deploying..."
+    podman-compose down 2>/dev/null || true
     podman-compose build
-    
-    echo "🚀 Starting services..."
     podman-compose up -d
     
-    # Wait for service to be healthy
-    echo "⏳ Waiting for service to be healthy..."
-    sleep 5
-    
-    # Check if services are running
+    # Check status
     podman-compose ps
     
     echo "✅ Deployment complete!"
-    echo "🌐 Access DART-E at: http://10.10.2.11:3000"
+    echo "🌐 DART-E available at: http://10.10.2.11:3000"
     echo "📊 Original DART at: http://10.10.2.11:8501"
 ENDSSH
