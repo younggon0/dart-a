@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  dart-e:
+    build: .
+    container_name: dart-e-intelligence
+    ports:
+      - "3000:3000"
+    environment:
+      # Database connection - use host.containers.internal for Mac mini
+      DATABASE_URL: ${DATABASE_URL:-postgresql://eric@host.containers.internal:5432/dart}
+      
+      # Claude API
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      
+      # App settings
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3000}
+      
+      # Optional: Connect to original DART API if needed
+      DART_API_URL: ${DART_API_URL:-http://dart-intelligence:8501}
+      
+    restart: unless-stopped
+    networks:
+      - dart-network
+    volumes:
+      - ./public:/app/public:ro  # Read-only public assets
+    depends_on:
+      - redis-cache  # For caching
+
+  # Redis for caching (optional but recommended)
+  redis-cache:
+    image: redis:7-alpine
+    container_name: dart-e-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - dart-network
+    volumes:
+      - redis-data:/data
+    command: redis-server --save 60 1 --loglevel warning
+
+networks:
+  dart-network:
+    external: true  # Use existing network from DART deployment
+    name: dart_dart-network
+
+volumes:
+  redis-data:
