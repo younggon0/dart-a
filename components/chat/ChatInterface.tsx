@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ChevronRight, Sparkles } from 'lucide-react';
+import { ChevronRight, Sparkles, RefreshCw } from 'lucide-react';
 import { SourcePanel } from '@/components/sources/SourcePanel';
 import { SourceReference } from '@/types/source';
 
@@ -52,10 +52,52 @@ export default function ChatInterface({ language = 'en' }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showAllQueries, setShowAllQueries] = useState(false);
+  const [sessionId, setSessionId] = useState<string>('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const queries = language === 'ko' ? KOREAN_QUERIES : ENGLISH_QUERIES;
   const displayedQueries = showAllQueries ? queries : queries.slice(0, 3);
+
+  // Initialize session on mount
+  useEffect(() => {
+    // Check for existing session in localStorage
+    const storedSessionId = localStorage.getItem('chatSessionId');
+    const storedMessages = localStorage.getItem('chatMessages');
+    
+    if (storedSessionId) {
+      setSessionId(storedSessionId);
+      
+      // Restore messages if they exist
+      if (storedMessages) {
+        try {
+          const parsed = JSON.parse(storedMessages);
+          setMessages(parsed.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          })));
+        } catch (e) {
+          console.error('Failed to restore messages:', e);
+        }
+      }
+    } else {
+      // Generate new session ID
+      const newSessionId = crypto.randomUUID ? crypto.randomUUID() : 
+        'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+          const r = Math.random() * 16 | 0;
+          const v = c === 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+      setSessionId(newSessionId);
+      localStorage.setItem('chatSessionId', newSessionId);
+    }
+  }, []);
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem('chatMessages', JSON.stringify(messages));
+    }
+  }, [messages]);
 
   useEffect(() => {
     // Scroll to bottom when messages change
@@ -67,6 +109,26 @@ export default function ChatInterface({ language = 'en' }: ChatInterfaceProps) {
   const handleQuickQuery = (query: string) => {
     setInput(query);
     handleSubmit(null, query);
+  };
+
+  const handleClearChat = () => {
+    // Clear messages
+    setMessages([]);
+    localStorage.removeItem('chatMessages');
+    
+    // Generate new session ID
+    const newSessionId = crypto.randomUUID ? crypto.randomUUID() : 
+      'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    setSessionId(newSessionId);
+    localStorage.setItem('chatSessionId', newSessionId);
+    
+    // Reset UI state
+    setInput('');
+    setShowAllQueries(false);
   };
 
   const handleSubmit = async (e?: React.FormEvent | null, directQuery?: string) => {
@@ -92,6 +154,7 @@ export default function ChatInterface({ language = 'en' }: ChatInterfaceProps) {
         body: JSON.stringify({
           message: queryText,
           language: language,
+          sessionId: sessionId,
         }),
       });
 
@@ -126,6 +189,21 @@ export default function ChatInterface({ language = 'en' }: ChatInterfaceProps) {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Header with Clear Chat button */}
+      {messages.length > 0 && (
+        <div className="flex justify-end p-2 border-b">
+          <Button
+            onClick={handleClearChat}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Clear Chat
+          </Button>
+        </div>
+      )}
+      
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
         <div className="space-y-4">
           {messages.length === 0 ? (

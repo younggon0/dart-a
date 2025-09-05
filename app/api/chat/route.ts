@@ -5,6 +5,12 @@ import { ContextBuilderWithSources } from '@/lib/context-builder-with-sources';
 import { TableRow } from '@/types/database';
 import { SourceReference } from '@/types/source';
 import { getCacheStats } from '@/lib/cache/api-cache';
+import { 
+  getSession, 
+  addToSession, 
+  buildContextWithHistory,
+  needsContext 
+} from '@/lib/session';
 
 export interface ChatRequest {
   message: string;
@@ -33,9 +39,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Track session if provided
+    if (body.sessionId) {
+      // Add user message to session history
+      addToSession(body.sessionId, 'user', body.message);
+    }
+
     // Step 1: Analyze query with Claude
     const analysis = await analyzeQuery(body.message);
     console.log('Query analysis:', analysis);
+    console.log('Needs context:', needsContext(body.message));
     
     // Step 2: Smart search for relevant tables
     const corpCode = body.corpCode || '00126380';
@@ -59,7 +72,13 @@ export async function POST(request: NextRequest) {
     
     // Step 4: Build context from results with source tracking
     const contextBuilder = new ContextBuilderWithSources();
-    const { context, sources } = contextBuilder.buildContextWithSources(searchResults, body.message);
+    let { context, sources } = contextBuilder.buildContextWithSources(searchResults, body.message);
+    
+    // Add conversation history if this is a follow-up question
+    if (body.sessionId && needsContext(body.message)) {
+      context = buildContextWithHistory(context, body.sessionId, body.message);
+      console.log('Added conversation history to context');
+    }
     
     // Step 5: Generate response with Claude
     const response = await generateResponse(
@@ -67,6 +86,11 @@ export async function POST(request: NextRequest) {
       context,
       body.language || analysis.language
     );
+    
+    // Track assistant response in session
+    if (body.sessionId) {
+      addToSession(body.sessionId, 'assistant', response);
+    }
     
     // Log cache statistics
     const cacheStats = getCacheStats();
