@@ -10,6 +10,7 @@ interface ExecutionPlanProps {
   language: 'en' | 'ko';
   activeAgent?: string;
   activeAction?: string;
+  onStepChange?: (step: string, progress: number) => void;
 }
 
 interface TaskStep {
@@ -18,7 +19,7 @@ interface TaskStep {
   status: 'pending' | 'active' | 'completed';
 }
 
-export default function ExecutionPlan({ tasks, language, activeAgent, activeAction }: ExecutionPlanProps) {
+export default function ExecutionPlan({ tasks, language, activeAgent, activeAction, onStepChange }: ExecutionPlanProps) {
   const [currentStep, setCurrentStep] = useState<string>('');
   const [stepProgress, setStepProgress] = useState(0);
   const [activeTaskId, setActiveTaskId] = useState<string>('');
@@ -97,17 +98,20 @@ export default function ExecutionPlan({ tasks, language, activeAgent, activeActi
       // Set initial step immediately
       setCurrentStep(stepNames[0]);
       setStepProgress(0);
+      onStepChange?.(stepNames[0], 0);
       
       // Schedule step 2
       const timeout1 = setTimeout(() => {
         setCurrentStep(stepNames[1]);
         setStepProgress(50);
+        onStepChange?.(stepNames[1], 50);
       }, 2000 + Math.random() * 1000); // 2-3 seconds
       
       // Schedule step 3
       const timeout2 = setTimeout(() => {
         setCurrentStep(stepNames[2]);
         setStepProgress(100);
+        onStepChange?.(stepNames[2], 100);
       }, 4000 + Math.random() * 2000); // 4-6 seconds total
       
       timeoutRefs.current = [timeout1, timeout2];
@@ -118,6 +122,7 @@ export default function ExecutionPlan({ tasks, language, activeAgent, activeActi
         setActiveTaskId('');
         setCurrentStep('');
         setStepProgress(0);
+        onStepChange?.('', 0);
       }, 500);
       
       timeoutRefs.current.push(timeout);
@@ -166,28 +171,9 @@ export default function ExecutionPlan({ tasks, language, activeAgent, activeActi
   return (
     <Card className="p-5 bg-white shadow-lg">
       <div className="space-y-3">
-        {/* Header with active agent status */}
-        <div className="flex items-center justify-between">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-2">
           <h3 className="text-lg font-semibold text-gray-900">{t.title}</h3>
-          {activeAgent && hasActiveTask && (
-            <div className="flex flex-col items-end gap-1">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-full border border-blue-200">
-                <Sparkles className="h-4 w-4 text-blue-600 animate-pulse" />
-                <span className="text-sm font-medium text-blue-900">
-                  {AGENT_REGISTRY[activeAgent]?.icon} {AGENT_REGISTRY[activeAgent]?.name}
-                </span>
-              </div>
-              {currentStep && (
-                <div className="flex items-center gap-2 text-xs text-blue-700">
-                  <ChevronRight className="h-3 w-3" />
-                  <span>{currentStep}</span>
-                  {stepProgress > 0 && (
-                    <span className="text-blue-400">({stepProgress}%)</span>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Simplified linear task list */}

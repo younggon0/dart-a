@@ -68,6 +68,8 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
   const [showMasterAgent, setShowMasterAgent] = useState(false);
   const [activeAgent, setActiveAgent] = useState<string | undefined>();
   const [activeAction, setActiveAction] = useState<string | undefined>();
+  const [currentStep, setCurrentStep] = useState<string>('');
+  const [stepProgress, setStepProgress] = useState<number>(0);
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
@@ -278,6 +280,9 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
                 isActive={currentPhase === 'planning'}
                 analysis={queryAnalysis}
                 language={language}
+                activeAgent={activeAgent}
+                currentStep={currentStep}
+                stepProgress={stepProgress}
               />
             )}
           </div>
@@ -290,6 +295,10 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
                 language={language}
                 activeAgent={activeAgent}
                 activeAction={activeAction}
+                onStepChange={(step, progress) => {
+                  setCurrentStep(step);
+                  setStepProgress(progress);
+                }}
               />
             )}
           </div>

@@ -1,26 +1,31 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Card } from '@/components/ui/card';
-import { Brain, Sparkles } from 'lucide-react';
-import { QueryAnalysis } from '@/lib/agents/types';
+import { Sparkles, ChevronRight } from 'lucide-react';
+import { QueryAnalysis, AGENT_REGISTRY } from '@/lib/agents/types';
 
 interface MasterAgentPanelProps {
   isActive: boolean;
   analysis?: QueryAnalysis | null;
   language: 'en' | 'ko';
+  activeAgent?: string;
+  currentStep?: string;
+  stepProgress?: number;
 }
 
-export default function MasterAgentPanel({ isActive, analysis, language }: MasterAgentPanelProps) {
-  const [displayText, setDisplayText] = useState('');
+export default function MasterAgentPanel({ isActive, analysis, language, activeAgent, currentStep, stepProgress }: MasterAgentPanelProps) {
   const [currentPhase, setCurrentPhase] = useState<'idle' | 'analyzing' | 'planning' | 'ready'>('idle');
+  const [hasStarted, setHasStarted] = useState(false);
+  const [masterStepKey, setMasterStepKey] = useState<'analyzing' | 'understanding' | 'planning' | 'ready'>('analyzing');
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
 
   const translations = {
     en: {
-      title: 'Master Agent',
-      analyzing: 'Analyzing query...',
-      understanding: 'Understanding requirements...',
-      planning: 'Planning execution strategy...',
+      masterAgent: 'Master Agent',
+      analyzing: 'Analyzing query',
+      understanding: 'Understanding requirements',
+      planning: 'Planning execution strategy',
       ready: 'Execution plan ready',
       identified: 'Identified Requirements',
       complexity: 'Complexity',
@@ -31,10 +36,10 @@ export default function MasterAgentPanel({ isActive, analysis, language }: Maste
       timeframe: 'Timeframe',
     },
     ko: {
-      title: '마스터 에이전트',
-      analyzing: '쿼리 분석 중...',
-      understanding: '요구사항 이해 중...',
-      planning: '실행 전략 계획 중...',
+      masterAgent: '마스터 에이전트',
+      analyzing: '쿼리 분석',
+      understanding: '요구사항 이해',
+      planning: '실행 전략 계획',
       ready: '실행 계획 준비 완료',
       identified: '식별된 요구사항',
       complexity: '복잡도',
@@ -49,26 +54,47 @@ export default function MasterAgentPanel({ isActive, analysis, language }: Maste
   const t = translations[language];
 
   useEffect(() => {
-    if (isActive && !analysis) {
+    if (isActive && !analysis && !hasStarted) {
+      setHasStarted(true);
       setCurrentPhase('analyzing');
-      setDisplayText(t.analyzing);
+      setMasterStepKey('analyzing');
       
-      setTimeout(() => {
-        setDisplayText(t.understanding);
-      }, 1000);
+      // Clear any existing timeouts
+      timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+      timeoutsRef.current = [];
       
-      setTimeout(() => {
+      // Set up new timeouts
+      const timeout1 = setTimeout(() => {
+        setMasterStepKey('understanding');
+      }, 800);
+      
+      const timeout2 = setTimeout(() => {
         setCurrentPhase('planning');
-        setDisplayText(t.planning);
-      }, 2000);
-    } else if (analysis) {
-      setCurrentPhase('ready');
-      setDisplayText(t.ready);
-    } else {
-      setCurrentPhase('idle');
-      setDisplayText('');
+        setMasterStepKey('planning');
+      }, 1600);
+      
+      const timeout3 = setTimeout(() => {
+        setCurrentPhase('ready');
+        setMasterStepKey('ready');
+      }, 2400);
+      
+      timeoutsRef.current = [timeout1, timeout2, timeout3];
     }
-  }, [isActive, analysis, t]);
+  }, [isActive, hasStarted, analysis]); // Only depend on isActive, hasStarted, and analysis
+  
+  // Clear timeouts on unmount
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+    };
+  }, []);
+  
+  // Handle when analysis completes
+  useEffect(() => {
+    if (analysis && currentPhase === 'ready') {
+      setMasterStepKey('ready');
+    }
+  }, [analysis, currentPhase]);
 
   const getComplexityColor = (complexity?: string) => {
     switch (complexity) {
@@ -84,26 +110,25 @@ export default function MasterAgentPanel({ isActive, analysis, language }: Maste
   return (
     <Card className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
       <div className="space-y-3">
-        {/* Header */}
-        <div className="flex items-center gap-2">
-          <div className={`p-2 rounded-lg bg-purple-100 ${currentPhase === 'analyzing' || currentPhase === 'planning' ? 'animate-pulse' : ''}`}>
-            <Brain className="h-5 w-5 text-purple-600" />
+        {/* Agent Status Display */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg border border-blue-200">
+            <Sparkles className="h-4 w-4 text-blue-600 animate-pulse" />
+            <span className="text-sm font-medium text-blue-900">
+              {activeAgent && currentPhase === 'ready' 
+                ? `${AGENT_REGISTRY[activeAgent]?.icon} ${AGENT_REGISTRY[activeAgent]?.name}`
+                : `🧠 ${t.masterAgent}`}
+            </span>
           </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-900">{t.title}</h3>
-            <p className="text-sm text-gray-600">
-              {displayText}
-              {(currentPhase === 'analyzing' || currentPhase === 'planning') && (
-                <span className="inline-flex ml-1">
-                  <span className="animate-pulse">.</span>
-                  <span className="animate-pulse animation-delay-200">.</span>
-                  <span className="animate-pulse animation-delay-400">.</span>
-                </span>
+          {/* Show current step */}
+          {((activeAgent && currentStep) || (!activeAgent && masterStepKey)) && (
+            <div className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-700">
+              <ChevronRight className="h-3.5 w-3.5" />
+              <span>{activeAgent ? currentStep : t[masterStepKey]}</span>
+              {activeAgent && stepProgress !== undefined && stepProgress > 0 && (
+                <span className="text-blue-400 ml-1">({stepProgress}%)</span>
               )}
-            </p>
-          </div>
-          {currentPhase === 'ready' && (
-            <Sparkles className="h-4 w-4 text-purple-600" />
+            </div>
           )}
         </div>
 
