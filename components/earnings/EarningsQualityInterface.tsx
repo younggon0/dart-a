@@ -1,11 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Sparkles, Search, AlertCircle } from 'lucide-react';
 import ProgressTracker from './ProgressTracker';
 import ResultsDashboard from './ResultsDashboard';
+import MasterAgentPanel from './MasterAgentPanel';
+import TaskPlannerView from './TaskPlannerView';
+import AgentChatLog from './AgentChatLog';
+import { Task, AgentMessage, QueryAnalysis, ExecutionPlan } from '@/lib/agents/types';
 
 interface EarningsQualityInterfaceProps {
   language: 'en' | 'ko';
@@ -54,19 +58,31 @@ const DEMO_QUERY = {
 
 export default function EarningsQualityInterface({ language }: EarningsQualityInterfaceProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [currentPhase, setCurrentPhase] = useState<'idle' | 'extracting' | 'calculating' | 'assessing' | 'complete'>('idle');
+  const [currentPhase, setCurrentPhase] = useState<'idle' | 'planning' | 'executing' | 'complete'>('idle');
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // New state for dynamic UI
+  const [queryAnalysis, setQueryAnalysis] = useState<QueryAnalysis | null>(null);
+  const [executionPlan, setExecutionPlan] = useState<ExecutionPlan | null>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [agentMessages, setAgentMessages] = useState<AgentMessage[]>([]);
+  const [showMasterAgent, setShowMasterAgent] = useState(false);
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
     setError(null);
     setResult(null);
-    setCurrentPhase('extracting');
+    setQueryAnalysis(null);
+    setExecutionPlan(null);
+    setTasks([]);
+    setAgentMessages([]);
+    setShowMasterAgent(true);
+    setCurrentPhase('planning');
 
     try {
-      // Start the analysis
-      const response = await fetch('/api/earnings-quality', {
+      // Use the orchestrated endpoint with streaming
+      const response = await fetch('/api/earnings-quality/orchestrated', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,22 +98,81 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
         throw new Error('Analysis failed');
       }
 
-      const data: AnalysisResult = await response.json();
+      // Read the streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
 
-      // Simulate phase progression for demo effect
-      setTimeout(() => setCurrentPhase('calculating'), 1500);
-      setTimeout(() => setCurrentPhase('assessing'), 2500);
-      setTimeout(() => {
-        setCurrentPhase('complete');
-        setResult(data);
-        setIsAnalyzing(false);
-      }, 3500);
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n').filter(line => line.startsWith('data: '));
+
+          for (const line of lines) {
+            const data = line.slice(6); // Remove 'data: ' prefix
+            if (data === '[DONE]') continue;
+
+            try {
+              const event = JSON.parse(data);
+              handleStreamEvent(event);
+            } catch (e) {
+              console.error('Failed to parse event:', e);
+            }
+          }
+        }
+      }
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Analysis failed');
       setIsAnalyzing(false);
       setCurrentPhase('idle');
     }
+  };
+
+  const handleStreamEvent = (event: any) => {
+    switch (event.type) {
+      case 'analysis':
+        setQueryAnalysis(event.data);
+        break;
+      case 'plan':
+        setExecutionPlan(event.data);
+        setTasks(event.data.tasks);
+        setCurrentPhase('executing');
+        break;
+      case 'message':
+        setAgentMessages(prev => [...prev, event.data]);
+        break;
+      case 'task_update':
+        setTasks(prev => updateTaskInList(prev, event.data));
+        break;
+      case 'result':
+        setResult(event.data);
+        setCurrentPhase('complete');
+        setIsAnalyzing(false);
+        break;
+      case 'error':
+        setError(event.data.message);
+        setIsAnalyzing(false);
+        setCurrentPhase('idle');
+        break;
+    }
+  };
+
+  const updateTaskInList = (tasks: Task[], updatedTask: Task): Task[] => {
+    return tasks.map(task => {
+      if (task.id === updatedTask.id) {
+        return updatedTask;
+      }
+      if (task.subtasks) {
+        return {
+          ...task,
+          subtasks: updateTaskInList(task.subtasks, updatedTask)
+        };
+      }
+      return task;
+    });
   };
 
   const translations = {
@@ -184,10 +259,35 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
         </div>
       </Card>
 
-      {/* Progress Tracker */}
-      {isAnalyzing && (
+      {/* Master Agent Panel */}
+      {showMasterAgent && (
+        <MasterAgentPanel
+          isActive={currentPhase === 'planning'}
+          analysis={queryAnalysis}
+          language={language}
+        />
+      )}
+
+      {/* Task Planner View */}
+      {tasks.length > 0 && (
+        <TaskPlannerView
+          tasks={tasks}
+          language={language}
+        />
+      )}
+
+      {/* Agent Chat Log */}
+      {agentMessages.length > 0 && (
+        <AgentChatLog
+          messages={agentMessages}
+          language={language}
+        />
+      )}
+
+      {/* Progress Tracker - now shown only during execution */}
+      {isAnalyzing && currentPhase === 'executing' && executionPlan && (
         <ProgressTracker 
-          currentPhase={currentPhase} 
+          currentPhase={'extracting'} 
           language={language}
         />
       )}
