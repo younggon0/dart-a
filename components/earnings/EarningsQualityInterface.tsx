@@ -1,0 +1,214 @@
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Sparkles, Search, AlertCircle } from 'lucide-react';
+import ProgressTracker from './ProgressTracker';
+import ResultsDashboard from './ResultsDashboard';
+
+interface EarningsQualityInterfaceProps {
+  language: 'en' | 'ko';
+}
+
+interface AnalysisResult {
+  status: 'success' | 'error';
+  rating?: {
+    score: number;
+    grade: 'EXCELLENT' | 'GOOD' | 'MODERATE' | 'POOR';
+    confidence: number;
+  };
+  metrics?: {
+    accruals: number;
+    accruals_ratio: number;
+    cf_ni_ratio: number;
+    m_score: number;
+    total_assets: number;
+    net_income: number;
+    operating_cf: number;
+  };
+  alerts?: Array<{
+    severity: 'info' | 'warning' | 'error';
+    message: string;
+    metric?: string;
+  }>;
+  execution_time?: {
+    extraction: number;
+    calculation: number;
+    assessment: number;
+    total: number;
+  };
+  sources?: Array<{
+    table_name: string;
+    source_file: string;
+    page_number: number;
+    period: string;
+  }>;
+  error?: string;
+}
+
+const DEMO_QUERY = {
+  en: "Analyze Samsung's earnings quality. Check for red flags in accruals, compare cash flow to net income, identify any one-time items, and calculate the Beneish M-Score. Give me a quality rating and specific concerns.",
+  ko: "삼성의 수익 품질을 분석하세요. 발생액의 위험 신호를 확인하고, 현금 흐름과 순이익을 비교하고, 일회성 항목을 식별하고, Beneish M-Score를 계산하세요. 품질 등급과 구체적인 우려 사항을 알려주세요."
+};
+
+export default function EarningsQualityInterface({ language }: EarningsQualityInterfaceProps) {
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [currentPhase, setCurrentPhase] = useState<'idle' | 'extracting' | 'calculating' | 'assessing' | 'complete'>('idle');
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleAnalyze = async () => {
+    setIsAnalyzing(true);
+    setError(null);
+    setResult(null);
+    setCurrentPhase('extracting');
+
+    try {
+      // Start the analysis
+      const response = await fetch('/api/earnings-quality', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          corpCode: '00126380', // Samsung hardcoded
+          query: DEMO_QUERY[language],
+          language,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Analysis failed');
+      }
+
+      const data: AnalysisResult = await response.json();
+
+      // Simulate phase progression for demo effect
+      setTimeout(() => setCurrentPhase('calculating'), 1500);
+      setTimeout(() => setCurrentPhase('assessing'), 2500);
+      setTimeout(() => {
+        setCurrentPhase('complete');
+        setResult(data);
+        setIsAnalyzing(false);
+      }, 3500);
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Analysis failed');
+      setIsAnalyzing(false);
+      setCurrentPhase('idle');
+    }
+  };
+
+  const translations = {
+    en: {
+      title: 'Financial Forensics Query',
+      subtitle: 'Institutional-grade earnings quality analysis',
+      query_label: 'Analysis Query',
+      analyze_button: 'Analyze Earnings Quality',
+      analyzing: 'Analyzing...',
+      company: 'Target Company',
+      samsung: 'Samsung Electronics Co., Ltd.',
+      value_prop: 'What takes analysts hours, we do in 3 seconds',
+    },
+    ko: {
+      title: '재무 포렌식 쿼리',
+      subtitle: '기관급 수익 품질 분석',
+      query_label: '분석 쿼리',
+      analyze_button: '수익 품질 분석',
+      analyzing: '분석 중...',
+      company: '대상 기업',
+      samsung: '삼성전자 주식회사',
+      value_prop: '애널리스트가 몇 시간 걸리는 작업을 3초 만에',
+    },
+  };
+
+  const t = translations[language];
+
+  return (
+    <div className="space-y-6">
+      {/* Query Card */}
+      <Card className="p-6 bg-white shadow-lg">
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <Search className="h-6 w-6 text-blue-600" />
+              {t.title}
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">{t.subtitle}</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {t.company}
+              </label>
+              <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm text-gray-900 font-medium">
+                {t.samsung}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t.query_label}
+            </label>
+            <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-gray-800 leading-relaxed">
+                {DEMO_QUERY[language]}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-gray-500 italic">{t.value_prop}</p>
+            <Button
+              onClick={handleAnalyze}
+              disabled={isAnalyzing}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6"
+              size="lg"
+            >
+              {isAnalyzing ? (
+                <>
+                  <Sparkles className="mr-2 h-5 w-5 animate-spin" />
+                  {t.analyzing}
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  {t.analyze_button}
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      {/* Progress Tracker */}
+      {isAnalyzing && (
+        <ProgressTracker 
+          currentPhase={currentPhase} 
+          language={language}
+        />
+      )}
+
+      {/* Error Display */}
+      {error && (
+        <Card className="p-4 bg-red-50 border-red-200">
+          <div className="flex items-center gap-2 text-red-700">
+            <AlertCircle className="h-5 w-5" />
+            <p className="text-sm font-medium">{error}</p>
+          </div>
+        </Card>
+      )}
+
+      {/* Results Dashboard */}
+      {result && result.status === 'success' && (
+        <ResultsDashboard 
+          result={result} 
+          language={language}
+        />
+      )}
+    </div>
+  );
+}
