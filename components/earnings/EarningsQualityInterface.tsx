@@ -267,7 +267,7 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
             >
               {isAnalyzing ? (
                 <>
-                  <Sparkles className="mr-2 h-5 w-5 animate-spin" />
+                  <Sparkles className="mr-2 h-5 w-5 animate-pulse" />
                   {t.analyzing}
                 </>
               ) : (

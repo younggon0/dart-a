@@ -133,7 +133,7 @@ export default function RequirementsConfirmation({
           >
             {isProcessing ? (
               <>
-                <CheckCircle className="mr-2 h-4 w-4 animate-spin" />
+                <CheckCircle className="mr-2 h-4 w-4 animate-pulse" />
                 {t.confirming}
               </>
             ) : isConfirmed ? (
