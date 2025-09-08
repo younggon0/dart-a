@@ -143,8 +143,8 @@ export class AgentOrchestrator {
       content: `Processing: ${subtask.title}`
     });
     
-    // Random delay for subtask
-    await this.delay(600 + Math.random() * 400); // 600-1000ms
+    // Longer delay for subtask to match step progression (4-7 seconds total)
+    await this.delay(1500 + Math.random() * 1000); // Initial delay
     
     // Simulate subtask execution
     if (subtask.type === 'extraction') {
@@ -165,9 +165,14 @@ export class AgentOrchestrator {
       content: 'Querying financial database...'
     });
     
-    // Add random delay before extraction
-    await this.delay(300 + Math.random() * 200);
+    // Update task with 'fetching' action
+    this.updateTaskAction(task.id, 'fetching');
+    
+    // Longer delays to match 3 steps (total ~6-9 seconds)
+    await this.delay(2000 + Math.random() * 1000); // Step 1: Connecting (2-3s)
+    await this.delay(2000 + Math.random() * 1000); // Step 2: Fetching (2-3s)
     const data = await agent.extract();
+    await this.delay(2000 + Math.random() * 1000); // Step 3: Parsing (2-3s)
     results.extractedData = data;
     
     this.emitAgentMessage({
@@ -190,9 +195,14 @@ export class AgentOrchestrator {
       content: 'Computing financial metrics...'
     });
     
-    // Add random delay before calculation
-    await this.delay(400 + Math.random() * 300);
+    // Update task with 'calculating' action
+    this.updateTaskAction(task.id, 'calculating');
+    
+    // Longer delays to match 3 steps (total ~6-9 seconds)
+    await this.delay(2000 + Math.random() * 1000); // Step 1: Loading data (2-3s)
+    await this.delay(2000 + Math.random() * 1000); // Step 2: Computing (2-3s)
     const metrics = agent.calculate();
+    await this.delay(2000 + Math.random() * 1000); // Step 3: Validating (2-3s)
     results.calculatedMetrics = metrics;
     
     this.emitAgentMessage({
@@ -215,9 +225,14 @@ export class AgentOrchestrator {
       content: 'Evaluating earnings quality...'
     });
     
-    // Add random delay before assessment
-    await this.delay(500 + Math.random() * 300);
+    // Update task with 'assessing' action
+    this.updateTaskAction(task.id, 'assessing');
+    
+    // Longer delays to match 3 steps (total ~6-9 seconds)
+    await this.delay(2000 + Math.random() * 1000); // Step 1: Analyzing patterns (2-3s)
+    await this.delay(2000 + Math.random() * 1000); // Step 2: Evaluating (2-3s)
     const assessment = agent.assess();
+    await this.delay(2000 + Math.random() * 1000); // Step 3: Generating insights (2-3s)
     results.assessment = assessment;
     
     this.emitAgentMessage({
@@ -273,6 +288,11 @@ export class AgentOrchestrator {
       'master': 'Master Agent'
     };
     return names[type] || type;
+  }
+
+  private updateTaskAction(taskId: string, action: string) {
+    // This is just to track the action type, actual task update happens through updateTaskStatus
+    // We can emit a special message to track action if needed
   }
 
   private delay(ms: number): Promise<void> {

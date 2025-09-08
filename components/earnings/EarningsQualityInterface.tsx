@@ -6,8 +6,8 @@ import { Card } from '@/components/ui/card';
 import { Sparkles, Search, AlertCircle } from 'lucide-react';
 import ResultsDashboard from './ResultsDashboard';
 import MasterAgentPanel from './MasterAgentPanel';
-import TaskPlannerView from './TaskPlannerView';
-import { Task, AgentMessage, QueryAnalysis, ExecutionPlan } from '@/lib/agents/types';
+import ExecutionPlan from './ExecutionPlan';
+import { Task, AgentMessage, QueryAnalysis, ExecutionPlan as ExecutionPlanType } from '@/lib/agents/types';
 
 interface EarningsQualityInterfaceProps {
   language: 'en' | 'ko';
@@ -62,10 +62,12 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
   
   // New state for dynamic UI
   const [queryAnalysis, setQueryAnalysis] = useState<QueryAnalysis | null>(null);
-  const [executionPlan, setExecutionPlan] = useState<ExecutionPlan | null>(null);
+  const [executionPlan, setExecutionPlan] = useState<ExecutionPlanType | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [agentMessages, setAgentMessages] = useState<AgentMessage[]>([]);
   const [showMasterAgent, setShowMasterAgent] = useState(false);
+  const [activeAgent, setActiveAgent] = useState<string | undefined>();
+  const [activeAction, setActiveAction] = useState<string | undefined>();
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
@@ -144,6 +146,15 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
         break;
       case 'task_update':
         setTasks(prev => updateTaskInList(prev, event.data));
+        // Extract active agent and action from task update
+        if (event.data.status === 'in-progress' && event.data.assignedAgent) {
+          setActiveAgent(event.data.assignedAgent);
+          // Determine action based on task type
+          if (event.data.type === 'extraction') setActiveAction('fetching');
+          else if (event.data.type === 'calculation') setActiveAction('calculating');
+          else if (event.data.type === 'assessment') setActiveAction('assessing');
+          else setActiveAction('executing');
+        }
         break;
       case 'result':
         setResult(event.data);
@@ -271,12 +282,14 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
             )}
           </div>
 
-          {/* Right Column: Sub-Agents (Task Planner) */}
+          {/* Right Column: Execution Plan */}
           <div>
             {tasks.length > 0 && (
-              <TaskPlannerView
+              <ExecutionPlan
                 tasks={tasks}
                 language={language}
+                activeAgent={activeAgent}
+                activeAction={activeAction}
               />
             )}
           </div>
