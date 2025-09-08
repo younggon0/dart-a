@@ -25,7 +25,7 @@ export interface Task {
   assignedAgent?: string;
   dependencies: string[];
   subtasks?: Task[];
-  result?: any;
+  result?: unknown;
   startTime?: number;
   endTime?: number;
   confidence?: number;
@@ -46,7 +46,7 @@ export interface AgentMessage {
   type: 'thinking' | 'decision' | 'status' | 'result' | 'error';
   content: string;
   timestamp: number;
-  metadata?: any;
+  metadata?: unknown;
 }
 
 export interface QueryAnalysis {

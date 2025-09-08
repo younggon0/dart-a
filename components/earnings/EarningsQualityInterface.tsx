@@ -153,37 +153,40 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
     }
   };
 
-  const handleStreamEvent = (event: any) => {
+  const handleStreamEvent = (event: { type: string; data: unknown }) => {
     switch (event.type) {
       case 'analysis':
-        setQueryAnalysis(event.data);
+        setQueryAnalysis(event.data as QueryAnalysis);
         break;
       case 'plan':
-        setExecutionPlan(event.data);
-        setTasks(event.data.tasks);
+        const planData = event.data as ExecutionPlanType;
+        setExecutionPlan(planData);
+        setTasks(planData.tasks);
         break;
       case 'message':
-        setAgentMessages(prev => [...prev, event.data]);
+        setAgentMessages(prev => [...prev, event.data as AgentMessage]);
         break;
       case 'task_update':
-        setTasks(prev => updateTaskInList(prev, event.data));
+        const taskData = event.data as Task;
+        setTasks(prev => updateTaskInList(prev, taskData));
         // Extract active agent and action from task update
-        if (event.data.status === 'in-progress' && event.data.assignedAgent) {
-          setActiveAgent(event.data.assignedAgent);
+        if (taskData.status === 'in-progress' && taskData.assignedAgent) {
+          setActiveAgent(taskData.assignedAgent);
           // Determine action based on task type
-          if (event.data.type === 'extraction') setActiveAction('fetching');
-          else if (event.data.type === 'calculation') setActiveAction('calculating');
-          else if (event.data.type === 'assessment') setActiveAction('assessing');
-          else if (event.data.type === 'report') setActiveAction('reporting');
+          if (taskData.type === 'extraction') setActiveAction('fetching');
+          else if (taskData.type === 'calculation') setActiveAction('calculating');
+          else if (taskData.type === 'assessment') setActiveAction('assessing');
+          else if (taskData.type === 'report') setActiveAction('reporting');
           else setActiveAction('executing');
         }
         break;
       case 'result':
-        setResult(event.data);
+        setResult(event.data as typeof result);
         setCurrentPhase('complete');
         break;
       case 'error':
-        setError(event.data.message);
+        const errorData = event.data as { message: string };
+        setError(errorData.message);
         setCurrentPhase('idle');
         break;
     }

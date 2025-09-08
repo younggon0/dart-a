@@ -127,7 +127,7 @@ export class DataExtractionAgent {
       let operatingCashFlow: number | null = null;
 
       // Search for key metrics in the table data
-      for (const row of table.data as any[]) {
+      for (const row of table.data as unknown[]) {
         if (!Array.isArray(row) || row.length < 2) continue;
 
         const label = String(row[0]).toLowerCase();
@@ -170,7 +170,7 @@ export class DataExtractionAgent {
       let operatingProfit: number | null = null;
       let netIncome: number | null = null;
 
-      for (const row of table.data as any[]) {
+      for (const row of table.data as unknown[]) {
         if (!Array.isArray(row) || row.length < 2) continue;
 
         const label = String(row[0]).toLowerCase();
@@ -220,7 +220,7 @@ export class DataExtractionAgent {
       let totalLiabilities: number | null = null;
       let totalEquity: number | null = null;
 
-      for (const row of table.data as any[]) {
+      for (const row of table.data as unknown[]) {
         if (!Array.isArray(row) || row.length < 2) continue;
 
         const label = String(row[0]).toLowerCase();
@@ -258,7 +258,7 @@ export class DataExtractionAgent {
     return null;
   }
 
-  private parseNumber(value: any): number | null {
+  private parseNumber(value: unknown): number | null {
     if (value === null || value === undefined) return null;
 
     // Convert to string and clean

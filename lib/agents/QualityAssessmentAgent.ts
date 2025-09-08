@@ -218,7 +218,7 @@ export class QualityAssessmentAgent {
     accrualScore: number,
     cashFlowScore: number,
     manipulationScore: number
-  ): any {
+  ): QualityAssessment['insights'] {
     const { accrualsRatio, cfNiRatio, mScore } = this.metrics;
 
     return {

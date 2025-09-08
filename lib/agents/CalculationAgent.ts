@@ -67,7 +67,7 @@ export class CalculationAgent {
       accrualsRatio,
       cfNiRatio,
       mScore,
-      mScoreComponents: components,
+      mScoreComponents: components as CalculatedMetrics['mScoreComponents'],
       revenue,
       operatingProfit,
       hasAllData,
@@ -128,11 +128,11 @@ export class CalculationAgent {
     revenue: number,
     operatingProfit: number,
     totalAssets: number
-  ): { mScore: number; components: any } {
+  ): { mScore: number; components: Record<string, number> } {
     // Simplified Beneish M-Score calculation
     // Using 4 variables instead of full 8 for demo
     
-    const components: any = {
+    const components: Record<string, number> = {
       tata: accrualsRatio, // Total Accruals to Total Assets
     };
 

@@ -1,6 +1,6 @@
 import { MasterAgent } from './MasterAgent';
-import { DataExtractionAgent } from './DataExtractionAgent';
-import { CalculationAgent } from './CalculationAgent';
+import { DataExtractionAgent, ExtractedData } from './DataExtractionAgent';
+import { CalculationAgent, CalculatedMetrics } from './CalculationAgent';
 import { QualityAssessmentAgent } from './QualityAssessmentAgent';
 import { 
   Task, 
@@ -42,7 +42,7 @@ export class AgentOrchestrator {
     await this.delay(100);
     
     // Step 3: Execute tasks sequentially with dynamic updates
-    const results: any = {};
+    const results: Record<string, unknown> = {};
     
     for (const task of plan.tasks) {
       await this.executeTask(task, corpCode, results);
@@ -56,7 +56,7 @@ export class AgentOrchestrator {
     };
   }
 
-  private async executeTask(task: Task, corpCode: string, results: any) {
+  private async executeTask(task: Task, corpCode: string, results: Record<string, unknown>) {
     // Update task status to assigned with random delay
     this.updateTaskStatus(task.id, 'assigned');
     await this.delay(300 + Math.random() * 200); // 300-500ms
@@ -143,7 +143,7 @@ export class AgentOrchestrator {
     }
   }
 
-  private async executeSubtask(subtask: Task, corpCode: string, results: any, parentAgent: string) {
+  private async executeSubtask(subtask: Task, corpCode: string, results: Record<string, unknown>, parentAgent: string) {
     this.updateTaskStatus(subtask.id, 'in-progress', parentAgent);
     
     this.emitAgentMessage({
@@ -165,7 +165,7 @@ export class AgentOrchestrator {
     this.updateTaskStatus(subtask.id, 'completed');
   }
 
-  private async performExtraction(task: Task, corpCode: string, results: any) {
+  private async performExtraction(task: Task, corpCode: string, results: Record<string, unknown>) {
     const agent = new DataExtractionAgent(corpCode);
     
     this.emitAgentMessage({
@@ -191,12 +191,12 @@ export class AgentOrchestrator {
     });
   }
 
-  private async performCalculation(task: Task, results: any) {
+  private async performCalculation(task: Task, results: Record<string, unknown>) {
     if (!results.extractedData) {
       throw new Error('No data available for calculation');
     }
     
-    const agent = new CalculationAgent(results.extractedData);
+    const agent = new CalculationAgent(results.extractedData as ExtractedData);
     
     this.emitAgentMessage({
       from: 'Calculation Agent',
@@ -221,12 +221,12 @@ export class AgentOrchestrator {
     });
   }
 
-  private async performAssessment(task: Task, results: any) {
+  private async performAssessment(task: Task, results: Record<string, unknown>) {
     if (!results.calculatedMetrics) {
       throw new Error('No metrics available for assessment');
     }
     
-    const agent = new QualityAssessmentAgent(results.calculatedMetrics);
+    const agent = new QualityAssessmentAgent(results.calculatedMetrics as CalculatedMetrics);
     
     this.emitAgentMessage({
       from: 'Quality Assessment Agent',
@@ -251,7 +251,7 @@ export class AgentOrchestrator {
     });
   }
 
-  private async performReportGeneration(task: Task, results: any) {
+  private async performReportGeneration(task: Task, results: Record<string, unknown>) {
     if (!results.assessment) {
       throw new Error('No assessment available for report generation');
     }

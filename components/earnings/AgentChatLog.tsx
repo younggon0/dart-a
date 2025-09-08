@@ -124,26 +124,34 @@ export default function AgentChatLog({ messages, language }: AgentChatLogProps) 
                   </div>
                   <p className="text-gray-700 break-words">{message.content}</p>
                   
-                  {/* Show metadata if available */}
-                  {message.metadata && (
-                    <div className="mt-1 pt-1 border-t border-gray-200">
-                      {message.metadata.requirements && (
-                        <div className="text-xs text-gray-500">
-                          {message.metadata.requirements.length} requirements identified
-                        </div>
-                      )}
-                      {message.metadata.agents && (
-                        <div className="text-xs text-gray-500">
-                          {message.metadata.agents.length} agents required
-                        </div>
-                      )}
-                      {message.metadata.estimatedTime && (
-                        <div className="text-xs text-gray-500">
-                          Est. time: {(message.metadata.estimatedTime / 1000).toFixed(1)}s
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {(() => {
+                    if (!message.metadata) return null;
+                    const metadata = message.metadata as { 
+                      requirements?: unknown[]; 
+                      agents?: unknown[]; 
+                      estimatedTime?: number 
+                    };
+                    
+                    return (
+                      <div className="mt-1 pt-1 border-t border-gray-200">
+                        {metadata.requirements && (
+                          <div className="text-xs text-gray-500">
+                            {metadata.requirements.length} requirements identified
+                          </div>
+                        )}
+                        {metadata.agents && (
+                          <div className="text-xs text-gray-500">
+                            {metadata.agents.length} agents required
+                          </div>
+                        )}
+                        {metadata.estimatedTime && (
+                          <div className="text-xs text-gray-500">
+                            Est. time: {(metadata.estimatedTime / 1000).toFixed(1)}s
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>

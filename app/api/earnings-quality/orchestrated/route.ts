@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     const encoder = new TextEncoder();
 
     // Function to send SSE events
-    const sendEvent = (type: string, data: any) => {
+    const sendEvent = (type: string, data: unknown) => {
       const event = `data: ${JSON.stringify({ type, data })}\n\n`;
       writer.write(encoder.encode(event));
     };
@@ -51,43 +51,62 @@ export async function POST(request: NextRequest) {
         const result = await orchestrator.executeQuery(body.query, body.corpCode, body.confirmedRequirements);
         
         // Transform the result to match the expected format
+        const assessment = result.results.assessment as { 
+          rating?: unknown; 
+          alerts?: unknown;
+        } | undefined;
+        const calculatedMetrics = result.results.calculatedMetrics as {
+          accruals?: number;
+          accrualsRatio?: number;
+          cfNiRatio?: number;
+          mScore?: number;
+          totalAssets?: number;
+          netIncome?: number;
+          operatingCashFlow?: number;
+        } | undefined;
+        const extractedData = result.results.extractedData as {
+          cashFlow?: { source: string; pageNumber: number; period: string };
+          incomeStatement?: { source: string; pageNumber: number; period: string };
+          balanceSheet?: { source: string; pageNumber: number; period: string };
+        } | undefined;
+        
         const finalResult = {
           status: 'success',
-          rating: result.results.assessment?.rating,
-          metrics: result.results.calculatedMetrics ? {
-            accruals: result.results.calculatedMetrics.accruals,
-            accruals_ratio: result.results.calculatedMetrics.accrualsRatio,
-            cf_ni_ratio: result.results.calculatedMetrics.cfNiRatio,
-            m_score: result.results.calculatedMetrics.mScore,
-            total_assets: result.results.calculatedMetrics.totalAssets,
-            net_income: result.results.calculatedMetrics.netIncome,
-            operating_cf: result.results.calculatedMetrics.operatingCashFlow,
+          rating: assessment?.rating,
+          metrics: calculatedMetrics ? {
+            accruals: calculatedMetrics.accruals,
+            accruals_ratio: calculatedMetrics.accrualsRatio,
+            cf_ni_ratio: calculatedMetrics.cfNiRatio,
+            m_score: calculatedMetrics.mScore,
+            total_assets: calculatedMetrics.totalAssets,
+            net_income: calculatedMetrics.netIncome,
+            operating_cf: calculatedMetrics.operatingCashFlow,
           } : undefined,
-          alerts: result.results.assessment?.alerts,
+          alerts: assessment?.alerts,
           execution_time: {
             extraction: 0,
             calculation: 0,
             assessment: 0,
             total: Date.now() - (result.plan.createdAt || Date.now())
           },
-          sources: result.results.extractedData ? [
-            result.results.extractedData.cashFlow && {
+          sources: extractedData ? [
+            extractedData.cashFlow && {
               table_name: 'Cash Flow Statement',
-              source_file: result.results.extractedData.cashFlow.source,
-              page_number: result.results.extractedData.cashFlow.pageNumber,
-              period: result.results.extractedData.cashFlow.period,
+              source_file: extractedData.cashFlow.source,
+              page_number: extractedData.cashFlow.pageNumber,
+              period: extractedData.cashFlow.period,
             },
-            result.results.extractedData.incomeStatement && {
+            extractedData.incomeStatement && {
               table_name: 'Income Statement',
-              source_file: result.results.extractedData.incomeStatement.source,
-              page_number: result.results.extractedData.incomeStatement.pageNumber,
-              period: result.results.extractedData.incomeStatement.period,
+              source_file: extractedData.incomeStatement.source,
+              page_number: extractedData.incomeStatement.pageNumber,
+              period: extractedData.incomeStatement.period,
             },
-            result.results.extractedData.balanceSheet && {
+            extractedData.balanceSheet && {
               table_name: 'Balance Sheet',
-              source_file: result.results.extractedData.balanceSheet.source,
-              page_number: result.results.extractedData.balanceSheet.pageNumber,
-              period: result.results.extractedData.balanceSheet.period,
+              source_file: extractedData.balanceSheet.source,
+              page_number: extractedData.balanceSheet.pageNumber,
+              period: extractedData.balanceSheet.period,
             }
           ].filter(Boolean) : []
         };

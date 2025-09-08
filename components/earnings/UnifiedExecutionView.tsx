@@ -26,7 +26,7 @@ interface UnifiedExecutionViewProps {
 
 interface AgentInfo {
   name: string;
-  icon: JSX.Element;
+  icon: React.ReactElement;
   color: string;
 }
 

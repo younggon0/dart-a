@@ -88,7 +88,7 @@ interface AnalysisReportProps {
     }>;
     report?: {
       executiveSummary: string;
-      detailedFindings: any;
+      detailedFindings: Record<string, unknown>;
       recommendations: string[];
       exportFormats: string[];
     };
@@ -139,8 +139,6 @@ export default function AnalysisReport({ result, language }: AnalysisReportProps
       cashFlowComposition: 'Cash Flow Composition',
       mScoreBreakdown: 'M-Score Component Analysis',
       criticalAlerts: 'Critical Alerts',
-      recommendations: 'Strategic Recommendations',
-      methodology: 'Methodology & Data Sources',
       executiveSummaryText: `This comprehensive analysis evaluates the financial health and earnings quality of Samsung Electronics Co., Ltd. based on the latest available financial data. Our multi-agent system has performed an in-depth examination of key financial metrics, identifying both strengths and areas of concern.`,
       keyFindingsText: `The analysis reveals {grade} earnings quality with a confidence level of {confidence}%. Key indicators suggest {assessment} with particular attention needed in {areas}.`,
       healthOverviewText: `Our assessment employs industry-standard metrics and proprietary algorithms to evaluate the reliability and sustainability of reported earnings. The following sections provide detailed insights into various aspects of financial health.`,
@@ -182,8 +180,6 @@ export default function AnalysisReport({ result, language }: AnalysisReportProps
       cashFlowComposition: '현금 흐름 구성',
       mScoreBreakdown: 'M-Score 구성 요소 분석',
       criticalAlerts: '중요 경고',
-      recommendations: '전략적 권장사항',
-      methodology: '방법론 및 데이터 소스',
       executiveSummaryText: `이 종합 분석은 최신 재무 데이터를 기반으로 삼성전자의 재무 건전성과 수익 품질을 평가합니다. 우리의 다중 에이전트 시스템은 주요 재무 지표에 대한 심층 검토를 수행하여 강점과 우려 영역을 모두 식별했습니다.`,
       keyFindingsText: `분석 결과 {confidence}%의 신뢰도로 {grade} 수익 품질을 보여줍니다. 주요 지표는 {areas}에 특별한 주의가 필요한 {assessment}를 시사합니다.`,
       healthOverviewText: `우리의 평가는 보고된 수익의 신뢰성과 지속 가능성을 평가하기 위해 업계 표준 지표와 독점 알고리즘을 사용합니다. 다음 섹션에서는 재무 건전성의 다양한 측면에 대한 자세한 통찰력을 제공합니다.`,
@@ -637,7 +633,7 @@ export default function AnalysisReport({ result, language }: AnalysisReportProps
                                 cx="50%"
                                 cy="50%"
                                 labelLine={false}
-                                label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                                label={({name, percent}) => `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`}
                                 outerRadius={80}
                                 fill="#8884d8"
                                 dataKey="value"
