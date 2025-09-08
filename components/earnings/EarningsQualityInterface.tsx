@@ -81,12 +81,15 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
     setTasks([]);
     setAgentMessages([]);
     setRequirementsConfirmed(false);
-    setCurrentPhase('requirements');
+    
+    // Add delay before showing requirements for better UX
+    await new Promise(resolve => setTimeout(resolve, 2500 + Math.random() * 1000)); // 2.5-3.5s delay
     
     // Extract requirements from query
     const masterAgent = new MasterAgent();
     const requirements = masterAgent.extractRequirements(DEMO_QUERY[language]);
     setExtractedRequirements(requirements);
+    setCurrentPhase('requirements');
     setIsAnalyzing(false);
   };
   
@@ -202,24 +205,24 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
 
   const translations = {
     en: {
-      title: 'Financial Forensics Query',
-      subtitle: 'Institutional-grade earnings quality analysis',
-      query_label: 'Analysis Query',
-      analyze_button: 'Analyze Earnings Quality',
-      analyzing: 'Analyzing...',
+      title: 'Analysis Query',
+      subtitle: '',
+      query_label: 'Query',
+      analyze_button: 'Ask',
+      analyzing: 'Understanding requirements...',
       company: 'Target Company',
       samsung: 'Samsung Electronics Co., Ltd.',
-      value_prop: 'What takes analysts hours, we do in 3 seconds',
+      value_prop: 'What takes analysts hours, we do in minutes',
     },
     ko: {
-      title: '재무 포렌식 쿼리',
-      subtitle: '기관급 수익 품질 분석',
-      query_label: '분석 쿼리',
-      analyze_button: '수익 품질 분석',
-      analyzing: '분석 중...',
+      title: '분석 쿼리',
+      subtitle: '',
+      query_label: '쿼리',
+      analyze_button: '질문',
+      analyzing: '요구사항 파악 중...',
       company: '대상 기업',
       samsung: '삼성전자 주식회사',
-      value_prop: '애널리스트가 몇 시간 걸리는 작업을 3초 만에',
+      value_prop: '애널리스트가 몇 시간 걸리는 작업을 몇 분 만에',
     },
   };
 
@@ -230,13 +233,6 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
       {/* Query Card */}
       <Card className="p-6 bg-white shadow-lg">
         <div className="space-y-4">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <Search className="h-6 w-6 text-blue-600" />
-              {t.title}
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">{t.subtitle}</p>
-          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -264,7 +260,7 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
             <p className="text-xs text-gray-500 italic">{t.value_prop}</p>
             <Button
               onClick={handleAnalyze}
-              disabled={isAnalyzing}
+              disabled={isAnalyzing || currentPhase !== 'idle'}
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6"
               size="lg"
             >

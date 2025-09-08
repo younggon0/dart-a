@@ -18,8 +18,8 @@ export default function Home() {
                 <TrendingUp className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Earnings Quality Analyzer</h1>
-                <p className="text-xs text-gray-500">AI-Powered Financial Forensics</p>
+                <h1 className="text-xl font-bold text-gray-900">AI Analysis Platform</h1>
+                <p className="text-xs text-gray-500">Multi-Agent Intelligence System</p>
               </div>
             </div>
             
