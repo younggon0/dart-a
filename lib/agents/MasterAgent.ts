@@ -235,6 +235,16 @@ export class MasterAgent {
         status: 'pending',
         dependencies: tasks.map(t => t.id)
       });
+      
+      // Add final report generation task
+      tasks.push({
+        id: 'generate-report',
+        title: 'Generate report',
+        description: 'Creating comprehensive analysis report',
+        type: 'report',
+        status: 'pending',
+        dependencies: ['validate-results']
+      });
     }
 
     return tasks;
@@ -254,6 +264,9 @@ export class MasterAgent {
         case 'assessment':
           agents.add('assessment');
           break;
+        case 'report':
+          agents.add('report');
+          break;
       }
       
       // Check subtasks
@@ -267,6 +280,9 @@ export class MasterAgent {
             break;
           case 'assessment':
             agents.add('assessment');
+            break;
+          case 'report':
+            agents.add('report');
             break;
         }
       });
@@ -286,7 +302,8 @@ export class MasterAgent {
       analysis: 500,
       extraction: 1000,
       calculation: 300,
-      assessment: 200
+      assessment: 200,
+      report: 400
     };
 
     let totalTime = 0;

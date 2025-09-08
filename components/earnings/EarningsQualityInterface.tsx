@@ -174,6 +174,7 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
           if (event.data.type === 'extraction') setActiveAction('fetching');
           else if (event.data.type === 'calculation') setActiveAction('calculating');
           else if (event.data.type === 'assessment') setActiveAction('assessing');
+          else if (event.data.type === 'report') setActiveAction('reporting');
           else setActiveAction('executing');
         }
         break;

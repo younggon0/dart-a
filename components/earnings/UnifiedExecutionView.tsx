@@ -12,7 +12,8 @@ import {
   Database,
   Calculator,
   FileSearch,
-  AlertTriangle
+  AlertTriangle,
+  FileText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -49,13 +50,19 @@ const AGENT_MAP: Record<string, AgentInfo> = {
     name: 'Validation Agent',
     icon: <AlertTriangle className="h-4 w-4" />,
     color: 'orange'
+  },
+  'report': {
+    name: 'Report Agent',
+    icon: <FileText className="h-4 w-4" />,
+    color: 'indigo'
   }
 };
 
 const STEP_SEQUENCES: Record<string, string[]> = {
   'extraction': ['Fetching data', 'Parsing records', 'Validating data'],
   'calculation': ['Loading formulas', 'Computing metrics', 'Verifying results'],
-  'assessment': ['Analyzing patterns', 'Applying rules', 'Generating insights']
+  'assessment': ['Analyzing patterns', 'Applying rules', 'Generating insights'],
+  'report': ['Compiling results', 'Formatting report', 'Finalizing document']
 };
 
 export default function UnifiedExecutionView({ 

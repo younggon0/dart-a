@@ -6,7 +6,8 @@ export type AgentType =
   | 'calculation'
   | 'assessment'
   | 'validation'
-  | 'synthesis';
+  | 'synthesis'
+  | 'report';
 
 export type TaskStatus = 
   | 'pending'
@@ -19,7 +20,7 @@ export interface Task {
   id: string;
   title: string;
   description: string;
-  type: 'analysis' | 'extraction' | 'calculation' | 'assessment';
+  type: 'analysis' | 'extraction' | 'calculation' | 'assessment' | 'report';
   status: TaskStatus;
   assignedAgent?: string;
   dependencies: string[];
@@ -134,6 +135,18 @@ export const AGENT_REGISTRY: Record<string, AgentCapability> = {
     ],
     description: 'Synthesizes findings into actionable insights',
     icon: '📝'
+  },
+  'report': {
+    name: 'Report Agent',
+    type: 'report',
+    capabilities: [
+      'Generate comprehensive reports',
+      'Format analysis results',
+      'Create executive summaries',
+      'Export to various formats'
+    ],
+    description: 'Creates detailed analysis reports with insights and recommendations',
+    icon: '📄'
   }
 };
 

@@ -73,6 +73,9 @@ export class AgentOrchestrator {
       case 'assessment':
         agentType = 'assessment';
         break;
+      case 'report':
+        agentType = 'report';
+        break;
       default:
         agentType = 'master';
     }
@@ -113,6 +116,9 @@ export class AgentOrchestrator {
       } else if (task.type === 'assessment') {
         // Execute assessment
         await this.performAssessment(task, results);
+      } else if (task.type === 'report') {
+        // Execute report generation
+        await this.performReportGeneration(task, results);
       } else {
         // Generic task execution with random delay
         await this.delay(800 + Math.random() * 400); // 800-1200ms
@@ -245,6 +251,40 @@ export class AgentOrchestrator {
     });
   }
 
+  private async performReportGeneration(task: Task, results: any) {
+    if (!results.assessment) {
+      throw new Error('No assessment available for report generation');
+    }
+    
+    this.emitAgentMessage({
+      from: 'Report Agent',
+      type: 'thinking',
+      content: 'Generating comprehensive report...'
+    });
+    
+    // Update task with 'reporting' action
+    this.updateTaskAction(task.id, 'reporting');
+    
+    // Longer delays to match 3 steps (total ~6-9 seconds)
+    await this.delay(2000 + Math.random() * 1000); // Step 1: Compiling results (2-3s)
+    await this.delay(2000 + Math.random() * 1000); // Step 2: Formatting report (2-3s)
+    await this.delay(2000 + Math.random() * 1000); // Step 3: Finalizing document (2-3s)
+    
+    // Simulate report generation
+    results.report = {
+      executiveSummary: 'Comprehensive analysis complete',
+      detailedFindings: results.assessment,
+      recommendations: ['Monitor accruals trends', 'Review cash flow patterns'],
+      exportFormats: ['PDF', 'Excel', 'JSON']
+    };
+    
+    this.emitAgentMessage({
+      from: 'Report Agent',
+      type: 'result',
+      content: 'Report generated successfully with executive summary and recommendations'
+    });
+  }
+
   private updateTaskStatus(taskId: string, status: Task['status'], assignedAgent?: string) {
     this.masterAgent.updateTaskStatus(taskId, status, assignedAgent);
     
@@ -288,6 +328,7 @@ export class AgentOrchestrator {
       'calculation': 'Calculation Agent',
       'assessment': 'Quality Assessment Agent',
       'validation': 'Validation Agent',
+      'report': 'Report Agent',
       'master': 'Master Agent'
     };
     return names[type] || type;
