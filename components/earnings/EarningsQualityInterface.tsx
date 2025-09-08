@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Sparkles, Search, AlertCircle } from 'lucide-react';
 import ResultsDashboard from './ResultsDashboard';
-import MasterAgentPanel from './MasterAgentPanel';
-import ExecutionPlan from './ExecutionPlan';
+import RequirementsConfirmation from './RequirementsConfirmation';
+import UnifiedExecutionView from './UnifiedExecutionView';
 import { Task, AgentMessage, QueryAnalysis, ExecutionPlan as ExecutionPlanType } from '@/lib/agents/types';
+import { MasterAgent } from '@/lib/agents/MasterAgent';
 
 interface EarningsQualityInterfaceProps {
   language: 'en' | 'ko';
@@ -56,20 +57,20 @@ const DEMO_QUERY = {
 
 export default function EarningsQualityInterface({ language }: EarningsQualityInterfaceProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [currentPhase, setCurrentPhase] = useState<'idle' | 'planning' | 'executing' | 'complete'>('idle');
+  const [currentPhase, setCurrentPhase] = useState<'idle' | 'requirements' | 'executing' | 'complete'>('idle');
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   
-  // New state for dynamic UI
+  // New state for requirement confirmation flow
+  const [extractedRequirements, setExtractedRequirements] = useState<string[]>([]);
+  const [confirmedRequirements, setConfirmedRequirements] = useState<string[]>([]);
+  const [requirementsConfirmed, setRequirementsConfirmed] = useState(false);
   const [queryAnalysis, setQueryAnalysis] = useState<QueryAnalysis | null>(null);
   const [executionPlan, setExecutionPlan] = useState<ExecutionPlanType | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [agentMessages, setAgentMessages] = useState<AgentMessage[]>([]);
-  const [showMasterAgent, setShowMasterAgent] = useState(false);
   const [activeAgent, setActiveAgent] = useState<string | undefined>();
   const [activeAction, setActiveAction] = useState<string | undefined>();
-  const [currentStep, setCurrentStep] = useState<string>('');
-  const [stepProgress, setStepProgress] = useState<number>(0);
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
@@ -79,11 +80,24 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
     setExecutionPlan(null);
     setTasks([]);
     setAgentMessages([]);
-    setShowMasterAgent(true);
-    setCurrentPhase('planning');
+    setRequirementsConfirmed(false);
+    setCurrentPhase('requirements');
+    
+    // Extract requirements from query
+    const masterAgent = new MasterAgent();
+    const requirements = masterAgent.extractRequirements(DEMO_QUERY[language]);
+    setExtractedRequirements(requirements);
+    setIsAnalyzing(false);
+  };
+  
+  const handleRequirementsConfirmed = async (selectedRequirements: string[]) => {
+    setConfirmedRequirements(selectedRequirements);
+    setRequirementsConfirmed(true);
+    setIsAnalyzing(true);
+    setCurrentPhase('executing');
 
     try {
-      // Use the orchestrated endpoint with streaming
+      // Use the orchestrated endpoint with streaming and confirmed requirements
       const response = await fetch('/api/earnings-quality/orchestrated', {
         method: 'POST',
         headers: {
@@ -93,6 +107,7 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
           corpCode: '00126380', // Samsung hardcoded
           query: DEMO_QUERY[language],
           language,
+          confirmedRequirements: selectedRequirements
         }),
       });
 
@@ -141,7 +156,6 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
       case 'plan':
         setExecutionPlan(event.data);
         setTasks(event.data.tasks);
-        setCurrentPhase('executing');
         break;
       case 'message':
         setAgentMessages(prev => [...prev, event.data]);
@@ -270,39 +284,33 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
         </div>
       </Card>
 
-      {/* Two-column layout for agents */}
-      {(showMasterAgent || tasks.length > 0) && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column: Master Agent */}
-          <div>
-            {showMasterAgent && (
-              <MasterAgentPanel
-                isActive={currentPhase === 'planning'}
-                analysis={queryAnalysis}
-                language={language}
-                activeAgent={activeAgent}
-                currentStep={currentStep}
-                stepProgress={stepProgress}
-              />
-            )}
-          </div>
-
-          {/* Right Column: Execution Plan */}
-          <div>
-            {tasks.length > 0 && (
-              <ExecutionPlan
-                tasks={tasks}
-                language={language}
-                activeAgent={activeAgent}
-                activeAction={activeAction}
-                onStepChange={(step, progress) => {
-                  setCurrentStep(step);
-                  setStepProgress(progress);
-                }}
-              />
-            )}
-          </div>
-        </div>
+      {/* Requirements Confirmation */}
+      {currentPhase === 'requirements' && extractedRequirements.length > 0 && (
+        <RequirementsConfirmation
+          requirements={extractedRequirements}
+          onConfirm={handleRequirementsConfirmed}
+          language={language}
+        />
+      )}
+      
+      {/* Collapsed Requirements (after confirmation) */}
+      {requirementsConfirmed && currentPhase !== 'requirements' && (
+        <RequirementsConfirmation
+          requirements={confirmedRequirements}
+          onConfirm={() => {}}
+          language={language}
+          isCollapsed={true}
+        />
+      )}
+      
+      {/* Unified Execution View */}
+      {tasks.length > 0 && (
+        <UnifiedExecutionView
+          tasks={tasks}
+          language={language}
+          activeAgent={activeAgent}
+          activeAction={activeAction}
+        />
       )}
 
       {/* Error Display */}

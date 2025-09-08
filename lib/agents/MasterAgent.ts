@@ -26,20 +26,8 @@ export class MasterAgent {
     }
   }
 
-  async analyzeQuery(query: string): Promise<QueryAnalysis> {
-    this.emit({
-      from: 'Master Agent',
-      type: 'thinking',
-      content: 'Analyzing user query to understand requirements...'
-    });
-
-    // Random delay between 1-1.5 seconds
-    await this.delay(1000 + Math.random() * 500);
-
-    // Parse the query for key components
+  extractRequirements(query: string): string[] {
     const queryLower = query.toLowerCase();
-    
-    // Extract requirements based on keywords
     const requirements: string[] = [];
     
     if (queryLower.includes('earnings quality')) {
@@ -63,6 +51,22 @@ export class MasterAgent {
     if (queryLower.includes('concerns') || queryLower.includes('specific concerns')) {
       requirements.push('Specific risk identification');
     }
+
+    return requirements;
+  }
+
+  async analyzeQuery(query: string, confirmedRequirements?: string[]): Promise<QueryAnalysis> {
+    this.emit({
+      from: 'Master Agent',
+      type: 'thinking',
+      content: 'Analyzing user query to understand requirements...'
+    });
+
+    // Random delay between 1-1.5 seconds
+    await this.delay(1000 + Math.random() * 500);
+
+    // Use confirmed requirements if provided, otherwise extract from query
+    const requirements = confirmedRequirements || this.extractRequirements(query);
 
     const analysis: QueryAnalysis = {
       intent: 'earnings_quality_analysis',
@@ -139,20 +143,45 @@ export class MasterAgent {
   }
 
   private buildTaskList(analysis: QueryAnalysis): Task[] {
-    const baseTasks = TASK_TEMPLATES.earningsQuality.map(template => ({
-      ...template,
-      status: 'pending' as const,
-      dependencies: template.dependencies || [],
-      subtasks: template.subtasks?.map(st => ({
-        ...st,
-        status: 'pending' as const,
-        dependencies: []
-      }))
-    }));
+    const tasks: Task[] = [];
+    const reqs = analysis.requirements;
 
-    // Add additional tasks based on specific requirements
-    if (analysis.requirements.some(r => r.includes('one-time items'))) {
-      baseTasks.push({
+    // Only add tasks for confirmed requirements
+    if (reqs.some(r => r.includes('earnings quality assessment'))) {
+      tasks.push({
+        id: 'extract-data',
+        title: 'Extract financial data',
+        description: 'Pulling financial statements from database',
+        type: 'extraction',
+        status: 'pending',
+        dependencies: []
+      });
+    }
+
+    if (reqs.some(r => r.includes('Accruals analysis'))) {
+      tasks.push({
+        id: 'calculate-accruals',
+        title: 'Calculate accruals metrics',
+        description: 'Computing accruals and ratios',
+        type: 'calculation',
+        status: 'pending',
+        dependencies: ['extract-data']
+      });
+    }
+
+    if (reqs.some(r => r.includes('Cash flow to net income'))) {
+      tasks.push({
+        id: 'calculate-cf-ratio',
+        title: 'Analyze cash flow ratios',
+        description: 'Comparing operating cash flow to net income',
+        type: 'calculation',
+        status: 'pending',
+        dependencies: ['extract-data']
+      });
+    }
+
+    if (reqs.some(r => r.includes('one-time items'))) {
+      tasks.push({
         id: 'identify-onetime',
         title: 'Identify one-time items',
         description: 'Scanning for non-recurring items affecting earnings',
@@ -162,18 +191,52 @@ export class MasterAgent {
       });
     }
 
-    if (analysis.requirements.some(r => r.includes('risk identification'))) {
-      baseTasks.push({
-        id: 'risk-analysis',
-        title: 'Perform risk analysis',
-        description: 'Identifying specific areas of concern',
-        type: 'assessment',
+    if (reqs.some(r => r.includes('M-Score'))) {
+      tasks.push({
+        id: 'calculate-mscore',
+        title: 'Calculate Beneish M-Score',
+        description: 'Computing earnings manipulation probability',
+        type: 'calculation',
         status: 'pending',
-        dependencies: ['calculate-metrics']
+        dependencies: ['extract-data']
       });
     }
 
-    return baseTasks;
+    if (reqs.some(r => r.includes('quality rating'))) {
+      tasks.push({
+        id: 'generate-rating',
+        title: 'Generate quality rating',
+        description: 'Synthesizing overall earnings quality score',
+        type: 'assessment',
+        status: 'pending',
+        dependencies: tasks.filter(t => t.type === 'calculation').map(t => t.id)
+      });
+    }
+
+    if (reqs.some(r => r.includes('risk identification'))) {
+      tasks.push({
+        id: 'risk-analysis',
+        title: 'Identify specific risks',
+        description: 'Analyzing areas of concern and red flags',
+        type: 'assessment',
+        status: 'pending',
+        dependencies: tasks.filter(t => t.type === 'calculation').map(t => t.id)
+      });
+    }
+
+    // Always add a final validation task if there are other tasks
+    if (tasks.length > 0) {
+      tasks.push({
+        id: 'validate-results',
+        title: 'Validate analysis',
+        description: 'Cross-checking results for accuracy',
+        type: 'assessment',
+        status: 'pending',
+        dependencies: tasks.map(t => t.id)
+      });
+    }
+
+    return tasks;
   }
 
   private determineRequiredAgents(tasks: Task[]): string[] {

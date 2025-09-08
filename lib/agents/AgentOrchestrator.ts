@@ -28,9 +28,9 @@ export class AgentOrchestrator {
     });
   }
 
-  async executeQuery(query: string, corpCode: string) {
-    // Step 1: Master agent analyzes the query
-    const analysis = await this.masterAgent.analyzeQuery(query);
+  async executeQuery(query: string, corpCode: string, confirmedRequirements?: string[]) {
+    // Step 1: Master agent analyzes the query with confirmed requirements
+    const analysis = await this.masterAgent.analyzeQuery(query, confirmedRequirements);
     this.callbacks.onAnalysisComplete?.(analysis);
     
     // Step 2: Create execution plan

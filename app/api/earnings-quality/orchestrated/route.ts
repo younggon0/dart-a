@@ -5,6 +5,7 @@ export interface OrchestratedRequest {
   corpCode: string;
   query: string;
   language: 'en' | 'ko';
+  confirmedRequirements?: string[];
 }
 
 export async function POST(request: NextRequest) {
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
           }
         });
 
-        const result = await orchestrator.executeQuery(body.query, body.corpCode);
+        const result = await orchestrator.executeQuery(body.query, body.corpCode, body.confirmedRequirements);
         
         // Transform the result to match the expected format
         const finalResult = {
