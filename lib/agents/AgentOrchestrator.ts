@@ -54,9 +54,9 @@ export class AgentOrchestrator {
   }
 
   private async executeTask(task: Task, corpCode: string, results: any) {
-    // Update task status to assigned
+    // Update task status to assigned with random delay
     this.updateTaskStatus(task.id, 'assigned');
-    await this.delay(300);
+    await this.delay(300 + Math.random() * 200); // 300-500ms
     
     // Determine which agent to use
     let agentType = '';
@@ -84,7 +84,8 @@ export class AgentOrchestrator {
       content: `Starting task: ${task.title}`
     });
     
-    await this.delay(500);
+    // Random delay for task start
+    await this.delay(500 + Math.random() * 500); // 500-1000ms
     
     // Execute based on task type
     try {
@@ -110,8 +111,8 @@ export class AgentOrchestrator {
         // Execute assessment
         await this.performAssessment(task, results);
       } else {
-        // Generic task execution
-        await this.delay(800);
+        // Generic task execution with random delay
+        await this.delay(800 + Math.random() * 400); // 800-1200ms
       }
       
       // Mark task as completed
@@ -142,7 +143,8 @@ export class AgentOrchestrator {
       content: `Processing: ${subtask.title}`
     });
     
-    await this.delay(400);
+    // Random delay for subtask
+    await this.delay(600 + Math.random() * 400); // 600-1000ms
     
     // Simulate subtask execution
     if (subtask.type === 'extraction') {
@@ -163,6 +165,8 @@ export class AgentOrchestrator {
       content: 'Querying financial database...'
     });
     
+    // Add random delay before extraction
+    await this.delay(300 + Math.random() * 200);
     const data = await agent.extract();
     results.extractedData = data;
     
@@ -186,6 +190,8 @@ export class AgentOrchestrator {
       content: 'Computing financial metrics...'
     });
     
+    // Add random delay before calculation
+    await this.delay(400 + Math.random() * 300);
     const metrics = agent.calculate();
     results.calculatedMetrics = metrics;
     
@@ -209,6 +215,8 @@ export class AgentOrchestrator {
       content: 'Evaluating earnings quality...'
     });
     
+    // Add random delay before assessment
+    await this.delay(500 + Math.random() * 300);
     const assessment = agent.assess();
     results.assessment = assessment;
     

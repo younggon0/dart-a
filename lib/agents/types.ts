@@ -141,12 +141,6 @@ export const AGENT_REGISTRY: Record<string, AgentCapability> = {
 export const TASK_TEMPLATES = {
   earningsQuality: [
     {
-      id: 'analyze-query',
-      title: 'Analyze user query',
-      type: 'analysis' as const,
-      description: 'Understanding requirements and planning execution'
-    },
-    {
       id: 'extract-data',
       title: 'Extract financial data',
       type: 'extraction' as const,

@@ -33,8 +33,8 @@ export class MasterAgent {
       content: 'Analyzing user query to understand requirements...'
     });
 
-    // Simulate analysis delay
-    await this.delay(800);
+    // Random delay between 1-1.5 seconds
+    await this.delay(1000 + Math.random() * 500);
 
     // Parse the query for key components
     const queryLower = query.toLowerCase();
@@ -94,7 +94,8 @@ export class MasterAgent {
       content: 'Creating execution plan based on requirements...'
     });
 
-    await this.delay(600);
+    // Random delay between 1.5-2 seconds for planning
+    await this.delay(1500 + Math.random() * 500);
 
     // Build task list based on analysis
     const tasks = this.buildTaskList(analysis);
@@ -121,11 +122,11 @@ export class MasterAgent {
       metadata: plan
     });
 
-    // Announce agent assignments
+    // Announce agent assignments with random delays
     for (const agentType of requiredAgents) {
       const agent = AGENT_REGISTRY[agentType];
       if (agent) {
-        await this.delay(300);
+        await this.delay(200 + Math.random() * 200); // 200-400ms between assignments
         this.emit({
           from: 'Master Agent',
           type: 'decision',

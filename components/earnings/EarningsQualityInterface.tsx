@@ -4,11 +4,9 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Sparkles, Search, AlertCircle } from 'lucide-react';
-import ProgressTracker from './ProgressTracker';
 import ResultsDashboard from './ResultsDashboard';
 import MasterAgentPanel from './MasterAgentPanel';
 import TaskPlannerView from './TaskPlannerView';
-import AgentChatLog from './AgentChatLog';
 import { Task, AgentMessage, QueryAnalysis, ExecutionPlan } from '@/lib/agents/types';
 
 interface EarningsQualityInterfaceProps {
@@ -259,37 +257,30 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
         </div>
       </Card>
 
-      {/* Master Agent Panel */}
-      {showMasterAgent && (
-        <MasterAgentPanel
-          isActive={currentPhase === 'planning'}
-          analysis={queryAnalysis}
-          language={language}
-        />
-      )}
+      {/* Two-column layout for agents */}
+      {(showMasterAgent || tasks.length > 0) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column: Master Agent */}
+          <div>
+            {showMasterAgent && (
+              <MasterAgentPanel
+                isActive={currentPhase === 'planning'}
+                analysis={queryAnalysis}
+                language={language}
+              />
+            )}
+          </div>
 
-      {/* Task Planner View */}
-      {tasks.length > 0 && (
-        <TaskPlannerView
-          tasks={tasks}
-          language={language}
-        />
-      )}
-
-      {/* Agent Chat Log */}
-      {agentMessages.length > 0 && (
-        <AgentChatLog
-          messages={agentMessages}
-          language={language}
-        />
-      )}
-
-      {/* Progress Tracker - now shown only during execution */}
-      {isAnalyzing && currentPhase === 'executing' && executionPlan && (
-        <ProgressTracker 
-          currentPhase={'extracting'} 
-          language={language}
-        />
+          {/* Right Column: Sub-Agents (Task Planner) */}
+          <div>
+            {tasks.length > 0 && (
+              <TaskPlannerView
+                tasks={tasks}
+                language={language}
+              />
+            )}
+          </div>
+        </div>
       )}
 
       {/* Error Display */}

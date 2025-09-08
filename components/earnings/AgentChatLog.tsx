@@ -85,16 +85,7 @@ export default function AgentChatLog({ messages, language }: AgentChatLogProps) 
     return 'text-gray-600';
   };
 
-  const formatTime = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString('en-US', { 
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      fractionalSecondDigits: 3
-    }).replace(/:/g, ':').slice(0, -1); // Remove last digit for cleaner display
-  };
+  // Removed formatTime function - no longer showing timestamps
 
   if (messages.length === 0) {
     return null;
@@ -102,9 +93,8 @@ export default function AgentChatLog({ messages, language }: AgentChatLogProps) 
 
   return (
     <Card className="p-4 bg-white h-64">
-      <div className="flex items-center justify-between mb-3">
+      <div className="mb-3">
         <h3 className="font-semibold text-gray-900">{t.title}</h3>
-        <span className="text-xs text-gray-500">{messages.length} messages</span>
       </div>
       
       <ScrollArea className="h-48" ref={scrollRef}>
@@ -131,9 +121,6 @@ export default function AgentChatLog({ messages, language }: AgentChatLogProps) 
                         </span>
                       </>
                     )}
-                    <span className="text-gray-400 ml-auto">
-                      {formatTime(message.timestamp)}
-                    </span>
                   </div>
                   <p className="text-gray-700 break-words">{message.content}</p>
                   
