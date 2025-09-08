@@ -65,6 +65,10 @@ const STEP_SEQUENCES: Record<string, string[]> = {
   'report': ['Compiling results', 'Formatting report', 'Finalizing document']
 };
 
+// Timing constants for step progression (in milliseconds)
+const REGULAR_STEP_DELAY = 1500; // Regular tasks: 1.5s per step
+const REPORT_STEP_DELAY = 3000;  // Report tasks: 3s per step
+
 export default function UnifiedExecutionView({ 
   tasks, 
   language, 
@@ -118,7 +122,11 @@ export default function UnifiedExecutionView({
         // Progress through remaining steps
         steps.forEach((_, index) => {
           if (index > 0) {
-            const delay = index * 2500 + Math.random() * 500; // 2.5-3s per step
+            // Use appropriate delay constant based on task type
+            const baseDelay = activeTask.type === 'report' ? REPORT_STEP_DELAY : REGULAR_STEP_DELAY;
+            const randomDelay = Math.random() * 500; // Add 0-500ms random variation
+            const delay = index * baseDelay + randomDelay;
+            
             const timeout = setTimeout(() => {
               // Mark previous step as completed
               setCompletedSteps(prev => ({ ...prev, [taskKey]: index - 1 }));
@@ -127,9 +135,10 @@ export default function UnifiedExecutionView({
               
               // If it's the last step, complete it after delay
               if (index === steps.length - 1) {
+                const completionDelay = activeTask.type === 'report' ? REPORT_STEP_DELAY : REGULAR_STEP_DELAY;
                 setTimeout(() => {
                   setCompletedSteps(prev => ({ ...prev, [taskKey]: index }));
-                }, 2000);
+                }, completionDelay);
               }
             }, delay);
             timeouts.push(timeout);

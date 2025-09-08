@@ -9,6 +9,10 @@ import {
   QueryAnalysis 
 } from './types';
 
+// Timing constants for step delays (in milliseconds)
+const REGULAR_STEP_DELAY = 1500; // Regular tasks: 1.5s per step
+const REPORT_STEP_DELAY = 3000;  // Report tasks: 3s per step
+
 export interface OrchestratorCallbacks {
   onMessage?: (message: AgentMessage) => void;
   onTaskUpdate?: (task: Task) => void;
@@ -177,11 +181,11 @@ export class AgentOrchestrator {
     // Update task with 'fetching' action
     this.updateTaskAction(task.id, 'fetching');
     
-    // Longer delays to match 3 steps (total ~6-9 seconds)
-    await this.delay(2000 + Math.random() * 1000); // Step 1: Connecting (2-3s)
-    await this.delay(2000 + Math.random() * 1000); // Step 2: Fetching (2-3s)
+    // Use regular step delay constant
+    await this.delay(REGULAR_STEP_DELAY + Math.random() * 500); // Step 1: Connecting
+    await this.delay(REGULAR_STEP_DELAY + Math.random() * 500); // Step 2: Fetching
     const data = await agent.extract();
-    await this.delay(2000 + Math.random() * 1000); // Step 3: Parsing (2-3s)
+    await this.delay(REGULAR_STEP_DELAY + Math.random() * 500); // Step 3: Parsing
     results.extractedData = data;
     
     this.emitAgentMessage({
@@ -207,11 +211,11 @@ export class AgentOrchestrator {
     // Update task with 'calculating' action
     this.updateTaskAction(task.id, 'calculating');
     
-    // Longer delays to match 3 steps (total ~6-9 seconds)
-    await this.delay(2000 + Math.random() * 1000); // Step 1: Loading data (2-3s)
-    await this.delay(2000 + Math.random() * 1000); // Step 2: Computing (2-3s)
+    // Use regular step delay constant
+    await this.delay(REGULAR_STEP_DELAY + Math.random() * 500); // Step 1: Loading data
+    await this.delay(REGULAR_STEP_DELAY + Math.random() * 500); // Step 2: Computing
     const metrics = agent.calculate();
-    await this.delay(2000 + Math.random() * 1000); // Step 3: Validating (2-3s)
+    await this.delay(REGULAR_STEP_DELAY + Math.random() * 500); // Step 3: Validating
     results.calculatedMetrics = metrics;
     
     this.emitAgentMessage({
@@ -237,11 +241,11 @@ export class AgentOrchestrator {
     // Update task with 'assessing' action
     this.updateTaskAction(task.id, 'assessing');
     
-    // Longer delays to match 3 steps (total ~6-9 seconds)
-    await this.delay(2000 + Math.random() * 1000); // Step 1: Analyzing patterns (2-3s)
-    await this.delay(2000 + Math.random() * 1000); // Step 2: Evaluating (2-3s)
+    // Use regular step delay constant
+    await this.delay(REGULAR_STEP_DELAY + Math.random() * 500); // Step 1: Analyzing patterns
+    await this.delay(REGULAR_STEP_DELAY + Math.random() * 500); // Step 2: Evaluating
     const assessment = agent.assess();
-    await this.delay(2000 + Math.random() * 1000); // Step 3: Generating insights (2-3s)
+    await this.delay(REGULAR_STEP_DELAY + Math.random() * 500); // Step 3: Generating insights
     results.assessment = assessment;
     
     this.emitAgentMessage({
@@ -265,10 +269,10 @@ export class AgentOrchestrator {
     // Update task with 'reporting' action
     this.updateTaskAction(task.id, 'reporting');
     
-    // Longer delays to match 3 steps (total ~6-9 seconds)
-    await this.delay(2000 + Math.random() * 1000); // Step 1: Compiling results (2-3s)
-    await this.delay(2000 + Math.random() * 1000); // Step 2: Formatting report (2-3s)
-    await this.delay(2000 + Math.random() * 1000); // Step 3: Finalizing document (2-3s)
+    // Use report step delay constant (longer for report generation)
+    await this.delay(REPORT_STEP_DELAY + Math.random() * 500); // Step 1: Compiling results
+    await this.delay(REPORT_STEP_DELAY + Math.random() * 500); // Step 2: Formatting report
+    await this.delay(REPORT_STEP_DELAY + Math.random() * 500); // Step 3: Finalizing document
     
     // Simulate report generation
     results.report = {
