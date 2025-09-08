@@ -8,11 +8,11 @@ PROJECT_PATH="~/deploy/dart-a"
 GIT_REPO="git@github.com:younggon0/dart-a.git"  # Update with your repo URL
 APP_PORT="3100"  # Using 3100 since 3000 is taken by dart-e
 
-echo "=€ Deploying DART-A (AI Analysis Platform) to Mac mini"
+echo "=ï¿½ Deploying DART-A (AI Analysis Platform) to Mac mini"
 
 # Copy .env.local to Mac mini if it exists locally
 if [ -f .env.local ]; then
-    echo "=ä Copying .env.local to Mac mini..."
+    echo "=ï¿½ Copying .env.local to Mac mini..."
     ssh $MINI_USER@$MINI_HOST "mkdir -p ~/deploy/dart-a"
     scp .env.local $MINI_USER@$MINI_HOST:~/deploy/dart-a/.env.local
     echo " Environment file copied"
@@ -29,11 +29,16 @@ ssh $MINI_USER@$MINI_HOST << ENDSSH
     
     # Clone or pull latest code
     if [ ! -d ~/deploy/dart-a ]; then
-        echo "=å Cloning repository..."
+        echo "ðŸ“¥ Cloning repository..."
+        cd ~/deploy
+        git clone $GIT_REPO
+    elif [ ! -d ~/deploy/dart-a/.git ]; then
+        echo "âš ï¸  Directory exists but is not a git repository. Removing and re-cloning..."
+        rm -rf ~/deploy/dart-a
         cd ~/deploy
         git clone $GIT_REPO
     else
-        echo "=å Pulling latest changes..."
+        echo "ðŸ“¥ Pulling latest changes..."
         cd ~/deploy/dart-a
         git pull origin main 2>/dev/null || git pull origin master
     fi
@@ -44,7 +49,7 @@ ssh $MINI_USER@$MINI_HOST << ENDSSH
     if [ -f .env.local ]; then
         echo " Using existing .env.local"
     else
-        echo "=Ý Creating template .env.local file..."
+        echo "=ï¿½ Creating template .env.local file..."
         cat > .env.local << 'EOF'
 # Database - use host.containers.internal for container to host connection
 DATABASE_URL=postgresql://eric@host.containers.internal:5432/dart
@@ -60,7 +65,7 @@ PORT=3100
 # Optional: OpenAI API Key (for comparison/fallback)
 # OPENAI_API_KEY=your-openai-key-here
 EOF
-        echo "   Please edit .env.local with your actual API keys"
+        echo "ï¿½  Please edit .env.local with your actual API keys"
         echo "   Required: ANTHROPIC_API_KEY for the AI agent system"
     fi
     
@@ -79,7 +84,7 @@ EOF
     
     # Create docker-compose.yml if it doesn't exist
     if [ ! -f docker-compose.yml ]; then
-        echo "=Ý Creating docker-compose.yml..."
+        echo "=ï¿½ Creating docker-compose.yml..."
         cat > docker-compose.yml << 'EOFDOCKER'
 version: '3.8'
 
@@ -115,7 +120,7 @@ EOFDOCKER
     
     # Create Dockerfile if it doesn't exist
     if [ ! -f Dockerfile ]; then
-        echo "=Ý Creating Dockerfile..."
+        echo "=ï¿½ Creating Dockerfile..."
         cat > Dockerfile << 'EOFDOCKER'
 FROM node:20-alpine AS base
 
@@ -170,11 +175,11 @@ EOFDOCKER
     echo "=( Building and deploying..."
     
     # Stop existing containers
-    echo "=æ Stopping existing containers..."
+    echo "=ï¿½ Stopping existing containers..."
     podman-compose down 2>/dev/null || true
     
     # Build the container
-    echo "<×  Building container image..."
+    echo "<ï¿½  Building container image..."
     if ! podman-compose build; then
         echo "L Build failed! Check the error messages above."
         echo "Common issues:"
@@ -186,7 +191,7 @@ EOFDOCKER
     fi
     
     # Start containers
-    echo "=€ Starting containers..."
+    echo "=ï¿½ Starting containers..."
     if ! podman-compose up -d; then
         echo "L Failed to start containers!"
         echo "Check logs with: podman-compose logs"
@@ -194,16 +199,16 @@ EOFDOCKER
     fi
     
     # Wait for container to be ready
-    echo "ó Waiting for services to start..."
+    echo "ï¿½ Waiting for services to start..."
     sleep 5
     
     # Check container health
     if ! podman-compose ps | grep -q "dart-a-platform.*Up"; then
-        echo "   Warning: dart-a container may not be running properly"
-        echo "=Ë Container status:"
+        echo "ï¿½  Warning: dart-a container may not be running properly"
+        echo "=ï¿½ Container status:"
         podman-compose ps
         echo ""
-        echo "=Ü Recent logs:"
+        echo "=ï¿½ Recent logs:"
         podman-compose logs --tail=20 dart-a
         echo ""
         echo "= To debug, run: podman-compose logs -f dart-a"
@@ -211,13 +216,13 @@ EOFDOCKER
     fi
     
     # Check health endpoint
-    echo "<å Checking application health..."
+    echo "<ï¿½ Checking application health..."
     for i in {1..10}; do
         if curl -s -f http://localhost:3100/api/health > /dev/null 2>&1; then
             echo " Application is healthy!"
             break
         elif [ \$i -eq 10 ]; then
-            echo "   Application health check failed after 10 attempts"
+            echo "ï¿½  Application health check failed after 10 attempts"
             echo "The container is running but the app may not be responding"
             echo "Check logs with: podman-compose logs dart-a"
             echo ""
@@ -236,15 +241,15 @@ EOFDOCKER
     podman-compose ps
     echo ""
     echo "> DART-A (AI Analysis Platform) available at: http://10.10.2.11:3100"
-    echo "=Ê DART-E (Earnings) at: http://10.10.2.11:3000"
-    echo "=È Original DART at: http://10.10.2.11:8501"
+    echo "=ï¿½ DART-E (Earnings) at: http://10.10.2.11:3000"
+    echo "=ï¿½ Original DART at: http://10.10.2.11:8501"
     echo ""
-    echo "=Ü View logs: podman-compose logs -f dart-a"
+    echo "=ï¿½ View logs: podman-compose logs -f dart-a"
     echo "= Restart: podman-compose restart dart-a"
-    echo "ù  Stop: podman-compose down"
+    echo "ï¿½  Stop: podman-compose down"
 ENDSSH
 
 echo ""
-echo "=Ì Local access after deployment:"
+echo "=ï¿½ Local access after deployment:"
 echo "   ssh -L 3100:localhost:3100 $MINI_USER@$MINI_HOST"
 echo "   Then visit: http://localhost:3100"
