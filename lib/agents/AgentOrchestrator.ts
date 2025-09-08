@@ -38,6 +38,9 @@ export class AgentOrchestrator {
     this.executionPlan = plan;
     this.callbacks.onPlanUpdate?.(plan);
     
+    // Add a tiny delay before starting execution to allow UI to update
+    await this.delay(100);
+    
     // Step 3: Execute tasks sequentially with dynamic updates
     const results: any = {};
     

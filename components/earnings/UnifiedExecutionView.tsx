@@ -67,6 +67,21 @@ export default function UnifiedExecutionView({
   const [currentSteps, setCurrentSteps] = useState<Record<string, number>>({});
   const [completedSteps, setCompletedSteps] = useState<Record<string, number>>({});
   const stepTimeoutsRef = useRef<Record<string, NodeJS.Timeout[]>>({});
+  const initializedTasksRef = useRef<Set<string>>(new Set());
+  const cardRef = useRef<HTMLDivElement>(null);
+  
+  // Scroll into view when component mounts
+  useEffect(() => {
+    if (cardRef.current && tasks.length > 0) {
+      setTimeout(() => {
+        cardRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        });
+      }, 100);
+    }
+  }, [tasks.length]);
 
   useEffect(() => {
     // Find the active task
@@ -76,9 +91,10 @@ export default function UnifiedExecutionView({
       const taskKey = activeTask.id;
       
       // Initialize steps for this task if not already done
-      if (!(taskKey in currentSteps)) {
+      if (!initializedTasksRef.current.has(taskKey)) {
+        initializedTasksRef.current.add(taskKey);
         setCurrentSteps(prev => ({ ...prev, [taskKey]: 0 }));
-        setCompletedSteps(prev => ({ ...prev, [taskKey]: 0 }));
+        setCompletedSteps(prev => ({ ...prev, [taskKey]: -1 }));
         
         // Clear any existing timeouts for this task
         if (stepTimeoutsRef.current[taskKey]) {
@@ -89,16 +105,28 @@ export default function UnifiedExecutionView({
         const steps = STEP_SEQUENCES[activeTask.type] || ['Processing', 'Analyzing', 'Completing'];
         const timeouts: NodeJS.Timeout[] = [];
         
-        // Progress through steps
+        // Start first step immediately
+        setCurrentSteps(prev => ({ ...prev, [taskKey]: 0 }));
+        
+        // Progress through remaining steps
         steps.forEach((_, index) => {
-          const delay = (index + 1) * (2000 + Math.random() * 1000); // 2-3s per step
-          const timeout = setTimeout(() => {
-            setCurrentSteps(prev => ({ ...prev, [taskKey]: index }));
-            if (index > 0) {
-              setCompletedSteps(prev => ({ ...prev, [taskKey]: index }));
-            }
-          }, delay);
-          timeouts.push(timeout);
+          if (index > 0) {
+            const delay = index * 2500 + Math.random() * 500; // 2.5-3s per step
+            const timeout = setTimeout(() => {
+              // Mark previous step as completed
+              setCompletedSteps(prev => ({ ...prev, [taskKey]: index - 1 }));
+              // Move to current step
+              setCurrentSteps(prev => ({ ...prev, [taskKey]: index }));
+              
+              // If it's the last step, complete it after delay
+              if (index === steps.length - 1) {
+                setTimeout(() => {
+                  setCompletedSteps(prev => ({ ...prev, [taskKey]: index }));
+                }, 2000);
+              }
+            }, delay);
+            timeouts.push(timeout);
+          }
         });
         
         stepTimeoutsRef.current[taskKey] = timeouts;
@@ -117,7 +145,7 @@ export default function UnifiedExecutionView({
       // Cleanup all timeouts on unmount
       Object.values(stepTimeoutsRef.current).flat().forEach(t => clearTimeout(t));
     };
-  }, [tasks, currentSteps]);
+  }, [tasks]); // Remove currentSteps from dependencies to prevent re-running when steps update
 
   const translations = {
     en: {
@@ -167,7 +195,8 @@ export default function UnifiedExecutionView({
     if (!agent) return null;
     
     const steps = STEP_SEQUENCES[task.type] || ['Processing', 'Analyzing', 'Completing'];
-    const currentStep = currentSteps[task.id] || 0;
+    const currentStepIndex = currentSteps[task.id] ?? 0;
+    const completedStepIndex = completedSteps[task.id] ?? -1;
     
     return (
       <motion.div
@@ -186,15 +215,15 @@ export default function UnifiedExecutionView({
         <div className="space-y-1 ml-6">
           {steps.map((step, index) => (
             <div key={index} className="flex items-center gap-2">
-              {index < currentStep ? (
+              {index <= completedStepIndex ? (
                 <CheckCircle className="h-3 w-3 text-green-500" />
-              ) : index === currentStep ? (
+              ) : index === currentStepIndex ? (
                 <Loader2 className="h-3 w-3 text-blue-500 animate-spin" />
               ) : (
                 <Circle className="h-3 w-3 text-gray-300" />
               )}
               <span className={`text-xs ${
-                index <= currentStep ? 'text-gray-700' : 'text-gray-400'
+                index <= currentStepIndex ? 'text-gray-700' : 'text-gray-400'
               }`}>
                 {step}
               </span>
@@ -206,11 +235,11 @@ export default function UnifiedExecutionView({
   };
 
   return (
-    <Card className="p-6 bg-white shadow-lg">
+    <Card ref={cardRef} className="p-6 bg-white shadow-lg" data-execution-plan>
       <div className="space-y-4">
-        <div>
+        <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">{t.title}</h3>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500">
             {tasks.filter(t => t.status === 'completed').length} / {tasks.length} tasks completed
           </p>
         </div>
@@ -229,14 +258,16 @@ export default function UnifiedExecutionView({
                     {getTaskIcon(task)}
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-medium text-gray-900">
-                          {task.title}
-                        </h4>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-medium text-gray-900">
+                            {task.title}
+                          </h4>
+                          <span className="text-xs text-gray-500">• {task.description}</span>
+                        </div>
                         {task.status === 'pending' && (
                           <span className="text-xs text-gray-500">{t.pending}</span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-600 mt-1">{task.description}</p>
                       
                       {/* Agent status for active task */}
                       <AnimatePresence>

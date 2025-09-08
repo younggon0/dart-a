@@ -96,6 +96,10 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
   const handleRequirementsConfirmed = async (selectedRequirements: string[]) => {
     setConfirmedRequirements(selectedRequirements);
     setRequirementsConfirmed(true);
+    
+    // Add delay for planning phase
+    await new Promise(resolve => setTimeout(resolve, 3000)); // Fixed 3s delay to match spinner
+    
     setCurrentPhase('executing');
 
     try {
@@ -277,7 +281,7 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
       </Card>
 
       {/* Requirements Confirmation */}
-      {(currentPhase === 'requirements' || currentPhase === 'executing') && extractedRequirements.length > 0 && (
+      {(currentPhase === 'requirements' || currentPhase === 'executing' || currentPhase === 'complete') && extractedRequirements.length > 0 && (
         <RequirementsConfirmation
           requirements={extractedRequirements}
           onConfirm={handleRequirementsConfirmed}

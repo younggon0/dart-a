@@ -44,6 +44,10 @@ export default function RequirementsConfirmation({
   useEffect(() => {
     if (isConfirmed) {
       setIsProcessing(true);
+      // Stop spinning after planning phase (when tasks are generated)
+      setTimeout(() => {
+        setIsProcessing(false);
+      }, 2900); // Just before plan appears
     }
   }, [isConfirmed]);
 
@@ -62,6 +66,7 @@ export default function RequirementsConfirmation({
       subtitle: 'Review and confirm the analysis scope',
       confirm: 'Confirm & Proceed',
       confirming: 'Planning execution...',
+      confirmed: 'Plan ready',
       empty: 'Please select at least one requirement'
     },
     ko: {
@@ -69,6 +74,7 @@ export default function RequirementsConfirmation({
       subtitle: '분석 범위를 검토하고 확인하세요',
       confirm: '확인 및 진행',
       confirming: '실행 계획 중...',
+      confirmed: '계획 준비 완료',
       empty: '최소 하나의 요구사항을 선택하세요'
     }
   };
@@ -125,10 +131,15 @@ export default function RequirementsConfirmation({
             disabled={requirements.length === 0 || isProcessing || isConfirmed}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white disabled:opacity-50"
           >
-            {(isProcessing || isConfirmed) ? (
+            {isProcessing ? (
               <>
                 <CheckCircle className="mr-2 h-4 w-4 animate-spin" />
                 {t.confirming}
+              </>
+            ) : isConfirmed ? (
+              <>
+                <CheckCircle className="mr-2 h-4 w-4" />
+                {t.confirmed}
               </>
             ) : (
               <>
