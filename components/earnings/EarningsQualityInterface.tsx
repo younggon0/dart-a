@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Sparkles, Search, AlertCircle } from 'lucide-react';
-import ResultsDashboard from './ResultsDashboard';
+import AnalysisReport from './AnalysisReport';
 import RequirementsConfirmation from './RequirementsConfirmation';
 import UnifiedExecutionView from './UnifiedExecutionView';
 import { Task, AgentMessage, QueryAnalysis, ExecutionPlan as ExecutionPlanType } from '@/lib/agents/types';
@@ -311,9 +311,9 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
         </Card>
       )}
 
-      {/* Results Dashboard */}
+      {/* Analysis Report */}
       {result && result.status === 'success' && (
-        <ResultsDashboard 
+        <AnalysisReport 
           result={result} 
           language={language}
         />
