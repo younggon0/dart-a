@@ -96,7 +96,6 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
   const handleRequirementsConfirmed = async (selectedRequirements: string[]) => {
     setConfirmedRequirements(selectedRequirements);
     setRequirementsConfirmed(true);
-    setIsAnalyzing(true);
     setCurrentPhase('executing');
 
     try {
@@ -146,7 +145,6 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Analysis failed');
-      setIsAnalyzing(false);
       setCurrentPhase('idle');
     }
   };
@@ -178,11 +176,9 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
       case 'result':
         setResult(event.data);
         setCurrentPhase('complete');
-        setIsAnalyzing(false);
         break;
       case 'error':
         setError(event.data.message);
-        setIsAnalyzing(false);
         setCurrentPhase('idle');
         break;
     }
@@ -281,21 +277,12 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
       </Card>
 
       {/* Requirements Confirmation */}
-      {currentPhase === 'requirements' && extractedRequirements.length > 0 && (
+      {(currentPhase === 'requirements' || currentPhase === 'executing') && extractedRequirements.length > 0 && (
         <RequirementsConfirmation
           requirements={extractedRequirements}
           onConfirm={handleRequirementsConfirmed}
           language={language}
-        />
-      )}
-      
-      {/* Collapsed Requirements (after confirmation) */}
-      {requirementsConfirmed && currentPhase !== 'requirements' && (
-        <RequirementsConfirmation
-          requirements={confirmedRequirements}
-          onConfirm={() => {}}
-          language={language}
-          isCollapsed={true}
+          isConfirmed={requirementsConfirmed}
         />
       )}
       
