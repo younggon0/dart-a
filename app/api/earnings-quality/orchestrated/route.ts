@@ -24,10 +24,20 @@ export async function POST(request: NextRequest) {
     const writer = stream.writable.getWriter();
     const encoder = new TextEncoder();
 
-    // Function to send SSE events
+    // Function to send SSE events with proper escaping
     const sendEvent = (type: string, data: unknown) => {
-      const event = `data: ${JSON.stringify({ type, data })}\n\n`;
-      writer.write(encoder.encode(event));
+      try {
+        // Ensure proper JSON stringification with no line breaks in the JSON itself
+        const jsonStr = JSON.stringify({ type, data });
+        // SSE format requires data: prefix and double newline at the end
+        const event = `data: ${jsonStr}\n\n`;
+        writer.write(encoder.encode(event));
+      } catch (e) {
+        console.error('Failed to send SSE event:', e);
+        // Send error event if serialization fails
+        const errorEvent = `data: ${JSON.stringify({ type: 'error', data: { message: 'Event serialization failed' } })}\n\n`;
+        writer.write(encoder.encode(errorEvent));
+      }
     };
 
     // Start orchestration in background

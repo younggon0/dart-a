@@ -126,22 +126,47 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
       const decoder = new TextDecoder();
 
       if (reader) {
+        let buffer = '';
+        
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
-          const chunk = decoder.decode(value);
-          const lines = chunk.split('\n').filter(line => line.startsWith('data: '));
-
+          // Decode chunk and add to buffer
+          buffer += decoder.decode(value, { stream: true });
+          
+          // Process complete lines from buffer
+          const lines = buffer.split('\n');
+          
+          // Keep the last line in buffer if it's incomplete
+          buffer = lines.pop() || '';
+          
           for (const line of lines) {
-            const data = line.slice(6); // Remove 'data: ' prefix
-            if (data === '[DONE]') continue;
+            if (!line.trim()) continue; // Skip empty lines
+            
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6); // Remove 'data: ' prefix
+              if (data === '[DONE]') continue;
 
+              try {
+                const event = JSON.parse(data);
+                handleStreamEvent(event);
+              } catch (e) {
+                console.error('Failed to parse event:', e, 'Data:', data);
+              }
+            }
+          }
+        }
+        
+        // Process any remaining data in buffer
+        if (buffer.trim() && buffer.startsWith('data: ')) {
+          const data = buffer.slice(6);
+          if (data !== '[DONE]') {
             try {
               const event = JSON.parse(data);
               handleStreamEvent(event);
             } catch (e) {
-              console.error('Failed to parse event:', e);
+              console.error('Failed to parse final event:', e, 'Data:', data);
             }
           }
         }
