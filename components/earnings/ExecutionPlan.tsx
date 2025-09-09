@@ -1,8 +1,8 @@
 'use client';
 
 import { Card } from '@/components/ui/card';
-import { CheckCircle2, Circle, Clock, AlertCircle, Sparkles, ChevronRight } from 'lucide-react';
-import { Task, AGENT_REGISTRY } from '@/lib/agents/types';
+import { CheckCircle2, Circle, Clock, AlertCircle } from 'lucide-react';
+import { Task } from '@/lib/agents/types';
 import { useState, useEffect, useRef } from 'react';
 
 interface ExecutionPlanProps {
@@ -13,15 +13,15 @@ interface ExecutionPlanProps {
   onStepChange?: (step: string, progress: number) => void;
 }
 
-interface TaskStep {
-  id: string;
-  name: string;
-  status: 'pending' | 'active' | 'completed';
-}
+// interface TaskStep {
+//   id: string;
+//   name: string;
+//   status: 'pending' | 'active' | 'completed';
+// }
 
-export default function ExecutionPlan({ tasks, language, activeAgent, activeAction, onStepChange }: ExecutionPlanProps) {
-  const [currentStep, setCurrentStep] = useState<string>('');
-  const [stepProgress, setStepProgress] = useState(0);
+export default function ExecutionPlan({ tasks, language, onStepChange }: ExecutionPlanProps) {
+  // const [currentStep, setCurrentStep] = useState<string>('');
+  // const [stepProgress, setStepProgress] = useState(0);
   const [activeTaskId, setActiveTaskId] = useState<string>('');
   const timeoutRefs = useRef<NodeJS.Timeout[]>([]);
 
@@ -96,21 +96,21 @@ export default function ExecutionPlan({ tasks, language, activeAgent, activeActi
       const stepNames = t.steps[activeTask.type as keyof typeof t.steps] || t.steps.extraction;
       
       // Set initial step immediately
-      setCurrentStep(stepNames[0]);
-      setStepProgress(0);
+      // setCurrentStep(stepNames[0]);
+      // setStepProgress(0);
       onStepChange?.(stepNames[0], 0);
       
       // Schedule step 2
       const timeout1 = setTimeout(() => {
-        setCurrentStep(stepNames[1]);
-        setStepProgress(50);
+        // setCurrentStep(stepNames[1]);
+        // setStepProgress(50);
         onStepChange?.(stepNames[1], 50);
       }, 2000 + Math.random() * 1000); // 2-3 seconds
       
       // Schedule step 3
       const timeout2 = setTimeout(() => {
-        setCurrentStep(stepNames[2]);
-        setStepProgress(100);
+        // setCurrentStep(stepNames[2]);
+        // setStepProgress(100);
         onStepChange?.(stepNames[2], 100);
       }, 4000 + Math.random() * 2000); // 4-6 seconds total
       
@@ -120,14 +120,14 @@ export default function ExecutionPlan({ tasks, language, activeAgent, activeActi
       // Task completed - keep showing last step briefly
       const timeout = setTimeout(() => {
         setActiveTaskId('');
-        setCurrentStep('');
-        setStepProgress(0);
+        // setCurrentStep('');
+        // setStepProgress(0);
         onStepChange?.('', 0);
       }, 500);
       
       timeoutRefs.current.push(timeout);
     }
-  }, [flatTasks, activeTaskId, t.steps]);
+  }, [flatTasks, activeTaskId, t.steps, onStepChange, t]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -162,7 +162,7 @@ export default function ExecutionPlan({ tasks, language, activeAgent, activeActi
     return task.description;
   };
 
-  const hasActiveTask = flatTasks.some(t => t.status === 'in-progress' || t.status === 'assigned');
+  // const hasActiveTask = flatTasks.some(t => t.status === 'in-progress' || t.status === 'assigned');
 
   if (tasks.length === 0) {
     return null;
@@ -178,7 +178,7 @@ export default function ExecutionPlan({ tasks, language, activeAgent, activeActi
 
         {/* Simplified linear task list */}
         <div className="space-y-1">
-          {flatTasks.map((task, index) => {
+          {flatTasks.map((task) => {
             const isActive = task.status === 'in-progress' || task.status === 'assigned';
             
             return (

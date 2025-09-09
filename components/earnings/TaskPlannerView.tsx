@@ -205,7 +205,7 @@ export default function TaskPlannerView({ tasks, language }: TaskPlannerViewProp
         
         {/* Agent Groups */}
         <div className="space-y-3">
-          {agentGroups.map((group, index) => (
+          {agentGroups.map((group) => (
             <div 
               key={group.agentId}
               className={`rounded-lg border-2 transition-all ${getGroupStatusStyle(group.overallStatus)}`}
@@ -244,7 +244,7 @@ export default function TaskPlannerView({ tasks, language }: TaskPlannerViewProp
               
               {/* Tasks List */}
               <div className="p-3 space-y-2">
-                {group.tasks.map((task, taskIndex) => (
+                {group.tasks.map((task) => (
                   <div 
                     key={task.id}
                     className={`flex items-center gap-3 px-3 py-2 rounded-md transition-all ${
@@ -274,7 +274,7 @@ export default function TaskPlannerView({ tasks, language }: TaskPlannerViewProp
         {agentGroups.length > 0 && (
           <div className="flex items-center justify-between pt-3 border-t">
             <div className="flex gap-2">
-              {agentGroups.map((group, index) => (
+              {agentGroups.map((group) => (
                 <div
                   key={group.agentId}
                   className={`h-2 flex-1 rounded-full transition-all ${

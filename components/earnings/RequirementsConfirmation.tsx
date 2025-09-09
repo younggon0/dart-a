@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trash2, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Trash2, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface RequirementsConfirmationProps {

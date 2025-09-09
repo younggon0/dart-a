@@ -3,8 +3,7 @@ import {
   QueryAnalysis, 
   ExecutionPlan, 
   AgentMessage,
-  AGENT_REGISTRY,
-  TASK_TEMPLATES
+  AGENT_REGISTRY
 } from './types';
 
 export class MasterAgent {

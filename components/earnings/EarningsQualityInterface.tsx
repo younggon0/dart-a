@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Sparkles, Search, AlertCircle } from 'lucide-react';
+import { Sparkles, AlertCircle } from 'lucide-react';
 import AnalysisReport from './AnalysisReport';
 import RequirementsConfirmation from './RequirementsConfirmation';
 import UnifiedExecutionView from './UnifiedExecutionView';
-import { Task, AgentMessage, QueryAnalysis, ExecutionPlan as ExecutionPlanType } from '@/lib/agents/types';
+import { Task, ExecutionPlan as ExecutionPlanType } from '@/lib/agents/types';
 import { MasterAgent } from '@/lib/agents/MasterAgent';
 
 interface EarningsQualityInterfaceProps {
@@ -63,12 +63,12 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
   
   // New state for requirement confirmation flow
   const [extractedRequirements, setExtractedRequirements] = useState<string[]>([]);
-  const [confirmedRequirements, setConfirmedRequirements] = useState<string[]>([]);
+  // const [confirmedRequirements, setConfirmedRequirements] = useState<string[]>([]);
   const [requirementsConfirmed, setRequirementsConfirmed] = useState(false);
-  const [queryAnalysis, setQueryAnalysis] = useState<QueryAnalysis | null>(null);
-  const [executionPlan, setExecutionPlan] = useState<ExecutionPlanType | null>(null);
+  // const [queryAnalysis, setQueryAnalysis] = useState<QueryAnalysis | null>(null);
+  // const [executionPlan, setExecutionPlan] = useState<ExecutionPlanType | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [agentMessages, setAgentMessages] = useState<AgentMessage[]>([]);
+  // const [agentMessages, setAgentMessages] = useState<AgentMessage[]>([]);
   const [activeAgent, setActiveAgent] = useState<string | undefined>();
   const [activeAction, setActiveAction] = useState<string | undefined>();
 
@@ -76,10 +76,10 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
     setIsAnalyzing(true);
     setError(null);
     setResult(null);
-    setQueryAnalysis(null);
-    setExecutionPlan(null);
+    // setQueryAnalysis(null);
+    // setExecutionPlan(null);
     setTasks([]);
-    setAgentMessages([]);
+    // setAgentMessages([]);
     setRequirementsConfirmed(false);
     
     // Add delay before showing requirements for better UX
@@ -94,7 +94,7 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
   };
   
   const handleRequirementsConfirmed = async (selectedRequirements: string[]) => {
-    setConfirmedRequirements(selectedRequirements);
+    // setConfirmedRequirements(selectedRequirements);
     setRequirementsConfirmed(true);
     
     // Add delay for planning phase
@@ -227,15 +227,15 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
   const handleStreamEvent = (event: { type: string; data: unknown }) => {
     switch (event.type) {
       case 'analysis':
-        setQueryAnalysis(event.data as QueryAnalysis);
+        // setQueryAnalysis(event.data as QueryAnalysis);
         break;
       case 'plan':
         const planData = event.data as ExecutionPlanType;
-        setExecutionPlan(planData);
+        // setExecutionPlan(planData);
         setTasks(planData.tasks);
         break;
       case 'message':
-        setAgentMessages(prev => [...prev, event.data as AgentMessage]);
+        // setAgentMessages(prev => [...prev, event.data as AgentMessage]);
         break;
       case 'task_update':
         const taskData = event.data as Task;

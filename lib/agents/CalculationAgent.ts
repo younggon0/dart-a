@@ -125,9 +125,10 @@ export class CalculationAgent {
 
   private calculateMScore(
     accrualsRatio: number,
-    revenue: number,
-    operatingProfit: number,
-    totalAssets: number
+    _revenue: number,
+    _operatingProfit: number,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _totalAssets: number
   ): { mScore: number; components: Record<string, number> } {
     // Simplified Beneish M-Score calculation
     // Using 4 variables instead of full 8 for demo
@@ -143,8 +144,8 @@ export class CalculationAgent {
     components.dsri = 1.0; // Assume stable for demo
     
     // GMI: Gross Margin Index (simplified)
-    if (revenue > 0 && operatingProfit > 0) {
-      const grossMargin = operatingProfit / revenue;
+    if (_revenue > 0 && _operatingProfit > 0) {
+      const grossMargin = _operatingProfit / _revenue;
       components.gmi = grossMargin > 0.3 ? 0.9 : 1.1; // Good margin = lower risk
     } else {
       components.gmi = 1.0;

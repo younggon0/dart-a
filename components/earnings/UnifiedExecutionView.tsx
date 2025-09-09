@@ -6,8 +6,6 @@ import { Task } from '@/lib/agents/types';
 import { 
   CheckCircle, 
   Circle, 
-  Clock, 
-  ChevronRight,
   Loader2,
   Database,
   Calculator,
@@ -71,9 +69,7 @@ const REPORT_STEP_DELAY = 3000;  // Report tasks: 3s per step
 
 export default function UnifiedExecutionView({ 
   tasks, 
-  language, 
-  activeAgent,
-  activeAction 
+  language
 }: UnifiedExecutionViewProps) {
   const [currentSteps, setCurrentSteps] = useState<Record<string, number>>({});
   const [completedSteps, setCompletedSteps] = useState<Record<string, number>>({});
@@ -159,7 +155,9 @@ export default function UnifiedExecutionView({
     
     return () => {
       // Cleanup all timeouts on unmount
-      Object.values(stepTimeoutsRef.current).flat().forEach(t => clearTimeout(t));
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      const currentTimeouts = stepTimeoutsRef.current;
+      Object.values(currentTimeouts).flat().forEach(t => clearTimeout(t));
     };
   }, [tasks]); // Remove currentSteps from dependencies to prevent re-running when steps update
 

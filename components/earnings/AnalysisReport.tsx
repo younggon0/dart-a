@@ -5,8 +5,6 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
-  TrendingUp, 
-  TrendingDown, 
   AlertTriangle, 
   CheckCircle, 
   AlertCircle,
@@ -20,7 +18,6 @@ import {
   Eye,
   EyeOff,
   Download,
-  Hash,
   Target,
   Shield,
   Database,
@@ -48,9 +45,7 @@ import {
   Legend,
   ResponsiveContainer,
   Cell,
-  ReferenceLine,
-  Area,
-  AreaChart
+  ReferenceLine
 } from 'recharts';
 
 interface AnalysisReportProps {

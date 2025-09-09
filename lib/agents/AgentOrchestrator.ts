@@ -338,7 +338,8 @@ export class AgentOrchestrator {
     return names[type] || type;
   }
 
-  private updateTaskAction(taskId: string, action: string) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private updateTaskAction(_taskId: string, _action: string) {
     // This is just to track the action type, actual task update happens through updateTaskStatus
     // We can emit a special message to track action if needed
   }

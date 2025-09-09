@@ -84,7 +84,7 @@ export default function ProgressTracker({ currentPhase, language }: ProgressTrac
           
           {/* Phases */}
           <div className="space-y-6">
-            {phases.map((phase, index) => {
+            {phases.map((phase) => {
               const status = getPhaseStatus(phase.id);
               const Icon = phase.icon;
               
