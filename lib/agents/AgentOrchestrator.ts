@@ -10,7 +10,7 @@ import {
 } from './types';
 
 // Timing constants for step delays (in milliseconds)
-const REGULAR_STEP_DELAY = 1500; // Regular tasks: 1.5s per step
+const REGULAR_STEP_DELAY = 1300; // Regular tasks: 1.3s per step
 const REPORT_STEP_DELAY = 3000;  // Report tasks: 3s per step
 
 export interface OrchestratorCallbacks {
@@ -63,7 +63,7 @@ export class AgentOrchestrator {
   private async executeTask(task: Task, corpCode: string, results: Record<string, unknown>) {
     // Update task status to assigned with random delay
     this.updateTaskStatus(task.id, 'assigned');
-    await this.delay(300 + Math.random() * 200); // 300-500ms
+    await this.delay(100 + Math.random() * 200); // 100-300ms
     
     // Determine which agent to use
     let agentType = '';

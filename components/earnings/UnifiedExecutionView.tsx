@@ -66,7 +66,7 @@ const STEP_SEQUENCES: Record<string, string[]> = {
 };
 
 // Timing constants for step progression (in milliseconds)
-const REGULAR_STEP_DELAY = 1500; // Regular tasks: 1.5s per step
+const REGULAR_STEP_DELAY = 1300; // Regular tasks: 1.3s per step
 const REPORT_STEP_DELAY = 3000;  // Report tasks: 3s per step
 
 export default function UnifiedExecutionView({ 

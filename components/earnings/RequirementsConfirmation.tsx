@@ -132,10 +132,10 @@ export default function RequirementsConfirmation({
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white disabled:opacity-50"
           >
             {isProcessing ? (
-              <>
-                <CheckCircle className="mr-2 h-4 w-4 animate-pulse" />
+              <span className="flex items-center animate-pulse">
+                <CheckCircle className="mr-2 h-4 w-4" />
                 {t.confirming}
-              </>
+              </span>
             ) : isConfirmed ? (
               <>
                 <CheckCircle className="mr-2 h-4 w-4" />

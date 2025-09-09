@@ -112,8 +112,8 @@ export default function MasterAgentPanel({ isActive, analysis, language, activeA
       <div className="space-y-3">
         {/* Agent Status Display */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg border border-blue-200">
-            <Sparkles className="h-4 w-4 text-blue-600 animate-pulse" />
+          <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg border border-blue-200 animate-pulse">
+            <Sparkles className="h-4 w-4 text-blue-600" />
             <span className="text-sm font-medium text-blue-900">
               {activeAgent && currentPhase === 'ready' 
                 ? `${AGENT_REGISTRY[activeAgent]?.icon} ${AGENT_REGISTRY[activeAgent]?.name}`
