@@ -24,14 +24,43 @@ export async function POST(request: NextRequest) {
     const writer = stream.writable.getWriter();
     const encoder = new TextEncoder();
 
-    // Function to send SSE events with proper escaping
+    // Function to send SSE events with chunking to avoid gvproxy 2KB buffer limit
     const sendEvent = (type: string, data: unknown) => {
       try {
         // Ensure proper JSON stringification with no line breaks in the JSON itself
         const jsonStr = JSON.stringify({ type, data });
-        // SSE format requires data: prefix and double newline at the end
-        const event = `data: ${jsonStr}\n\n`;
-        writer.write(encoder.encode(event));
+        
+        // Check if message exceeds safe size for gvproxy (leave margin for SSE format)
+        const MAX_CHUNK_SIZE = 1800; // Safe under 2KB with SSE format overhead
+        
+        if (jsonStr.length > MAX_CHUNK_SIZE) {
+          // Split large messages into chunks
+          const messageId = Math.random().toString(36).substring(7);
+          const chunks: string[] = [];
+          
+          // Split the JSON string into chunks
+          for (let i = 0; i < jsonStr.length; i += MAX_CHUNK_SIZE) {
+            chunks.push(jsonStr.substring(i, i + MAX_CHUNK_SIZE));
+          }
+          
+          // Send each chunk as a separate SSE event
+          chunks.forEach((chunk, index) => {
+            const chunkEvent = {
+              type: 'chunk',
+              messageId,
+              chunkIndex: index,
+              totalChunks: chunks.length,
+              chunk,
+              originalType: type
+            };
+            const event = `data: ${JSON.stringify(chunkEvent)}\n\n`;
+            writer.write(encoder.encode(event));
+          });
+        } else {
+          // Message is small enough to send as-is
+          const event = `data: ${jsonStr}\n\n`;
+          writer.write(encoder.encode(event));
+        }
       } catch (e) {
         console.error('Failed to send SSE event:', e);
         // Send error event if serialization fails
