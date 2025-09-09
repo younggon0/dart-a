@@ -123,23 +123,63 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
 
       // Read the streaming response
       const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-
+      
       if (reader) {
-        let buffer = '';
+        // Create a new TextDecoder for each read session to ensure proper streaming
+        // This avoids potential issues with production builds optimizing the decoder
+        let textBuffer = '';
+        let byteBuffer = new Uint8Array(0);
         
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
-          // Decode chunk and add to buffer
-          buffer += decoder.decode(value, { stream: true });
+          // Concatenate new bytes with any remaining bytes from previous chunk
+          const newBuffer = new Uint8Array(byteBuffer.length + value.length);
+          newBuffer.set(byteBuffer);
+          newBuffer.set(value, byteBuffer.length);
+          
+          // Try to decode the entire buffer
+          // Create a fresh decoder each time to avoid state issues in production
+          const decoder = new TextDecoder('utf-8', { fatal: false });
+          const decoded = decoder.decode(newBuffer, { stream: true });
+          
+          // Check if we have any replacement characters indicating incomplete UTF-8
+          // If the last few bytes might be incomplete UTF-8, keep them for next iteration
+          let decodedClean = decoded;
+          let bytesToKeep = 0;
+          
+          // Check if the last character might be incomplete (common for multi-byte UTF-8)
+          // We keep up to 3 bytes as UTF-8 characters can be up to 4 bytes
+          if (value.length > 0) {
+            const lastBytes = newBuffer.slice(-4);
+            const testDecoder = new TextDecoder('utf-8', { fatal: false });
+            const testDecode = testDecoder.decode(lastBytes);
+            
+            // If we see replacement character at the end, we likely have incomplete UTF-8
+            if (testDecode.includes('\ufffd')) {
+              // Keep the last few bytes for the next chunk
+              bytesToKeep = Math.min(3, value.length);
+              byteBuffer = newBuffer.slice(-bytesToKeep);
+              
+              // Decode without the potentially incomplete bytes
+              const completeBuffer = newBuffer.slice(0, -bytesToKeep);
+              decodedClean = new TextDecoder('utf-8', { fatal: false }).decode(completeBuffer);
+            } else {
+              byteBuffer = new Uint8Array(0);
+            }
+          } else {
+            byteBuffer = new Uint8Array(0);
+          }
+          
+          // Add decoded text to our text buffer
+          textBuffer += decodedClean;
           
           // Process complete lines from buffer
-          const lines = buffer.split('\n');
+          const lines = textBuffer.split('\n');
           
           // Keep the last line in buffer if it's incomplete
-          buffer = lines.pop() || '';
+          textBuffer = lines.pop() || '';
           
           for (const line of lines) {
             if (!line.trim()) continue; // Skip empty lines
@@ -158,9 +198,15 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
           }
         }
         
+        // Decode any remaining bytes
+        if (byteBuffer.length > 0) {
+          const finalDecoder = new TextDecoder('utf-8', { fatal: false });
+          textBuffer += finalDecoder.decode(byteBuffer);
+        }
+        
         // Process any remaining data in buffer
-        if (buffer.trim() && buffer.startsWith('data: ')) {
-          const data = buffer.slice(6);
+        if (textBuffer.trim() && textBuffer.startsWith('data: ')) {
+          const data = textBuffer.slice(6);
           if (data !== '[DONE]') {
             try {
               const event = JSON.parse(data);
