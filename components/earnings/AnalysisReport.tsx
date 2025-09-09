@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -114,6 +114,23 @@ export default function AnalysisReport({ result, language }: AnalysisReportProps
     'health-overview': true,
     'detailed-analysis': true
   });
+  const reportContainerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to top of report when component mounts
+  useEffect(() => {
+    // Small delay to ensure DOM is ready and smooth transition
+    const scrollTimer = setTimeout(() => {
+      if (reportContainerRef.current) {
+        reportContainerRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        });
+      }
+    }, 100);
+
+    return () => clearTimeout(scrollTimer);
+  }, []);
 
   const translations = {
     en: {
@@ -278,7 +295,7 @@ export default function AnalysisReport({ result, language }: AnalysisReportProps
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div ref={reportContainerRef} className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Report Header */}
       <div className="bg-white border-b sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
