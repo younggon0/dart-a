@@ -121,9 +121,6 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
         throw new Error('Analysis failed');
       }
 
-      // Chunk reassembly map for handling chunked messages
-      const chunkMap = new Map<string, { chunks: (string | undefined)[], totalChunks: number, originalType: string }>();
-
       // Read the streaming response
       const reader = response.body?.getReader();
       
@@ -193,39 +190,7 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
 
               try {
                 const event = JSON.parse(data);
-                
-                // Check if this is a chunked message
-                if (event.type === 'chunk') {
-                  const { messageId, chunkIndex, totalChunks, chunk, originalType } = event;
-                  
-                  // Initialize or get chunk data
-                  if (!chunkMap.has(messageId)) {
-                    chunkMap.set(messageId, {
-                      chunks: new Array(totalChunks),
-                      totalChunks,
-                      originalType
-                    });
-                  }
-                  
-                  const chunkData = chunkMap.get(messageId)!;
-                  chunkData.chunks[chunkIndex] = chunk;
-                  
-                  // Check if all chunks received
-                  if (chunkData.chunks.every(c => c !== undefined)) {
-                    // Reassemble the original message
-                    const reassembled = chunkData.chunks.join('');
-                    const originalEvent = JSON.parse(reassembled);
-                    
-                    // Clean up
-                    chunkMap.delete(messageId);
-                    
-                    // Handle the reassembled event
-                    handleStreamEvent(originalEvent);
-                  }
-                } else {
-                  // Regular non-chunked message
-                  handleStreamEvent(event);
-                }
+                handleStreamEvent(event);
               } catch (e) {
                 console.error('Failed to parse event:', e, 'Data:', data);
               }
@@ -245,39 +210,7 @@ export default function EarningsQualityInterface({ language }: EarningsQualityIn
           if (data !== '[DONE]') {
             try {
               const event = JSON.parse(data);
-              
-              // Check if this is a chunked message
-              if (event.type === 'chunk') {
-                const { messageId, chunkIndex, totalChunks, chunk, originalType } = event;
-                
-                // Initialize or get chunk data
-                if (!chunkMap.has(messageId)) {
-                  chunkMap.set(messageId, {
-                    chunks: new Array(totalChunks),
-                    totalChunks,
-                    originalType
-                  });
-                }
-                
-                const chunkData = chunkMap.get(messageId)!;
-                chunkData.chunks[chunkIndex] = chunk;
-                
-                // Check if all chunks received
-                if (chunkData.chunks.every(c => c !== undefined)) {
-                  // Reassemble the original message
-                  const reassembled = chunkData.chunks.join('');
-                  const originalEvent = JSON.parse(reassembled);
-                  
-                  // Clean up
-                  chunkMap.delete(messageId);
-                  
-                  // Handle the reassembled event
-                  handleStreamEvent(originalEvent);
-                }
-              } else {
-                // Regular non-chunked message
-                handleStreamEvent(event);
-              }
+              handleStreamEvent(event);
             } catch (e) {
               console.error('Failed to parse final event:', e, 'Data:', data);
             }
